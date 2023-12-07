@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"slices"
@@ -28,11 +27,34 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// emailProtectionDomains is a slice of the parts after `@` of email addresses from
+// email protection services.
 var emailProtectionDomains []string = []string{"duck.com", "mozmail.com", "icloud.com"}
 var verbose bool = false
+var ApiSessionUrl string = "https://api.fastmail.com/jmap/session"
 
 func main() {
 	godotenv.Load()
+	token := getApiToken()
+	accountId, url := getAccountIdAndApiUrl(token)
+
+	// TODO: try to combine these into one web request.
+	inboxId := getMailboxId(`{"role": "inbox"}`, accountId, url, token)
+	spamId := getMailboxId(`{"name": "spam"}`, accountId, url, token)
+	if verbose {
+		fmt.Printf("inbox ID: %s\n", inboxId)
+		fmt.Printf("spam folder ID: %s\n", spamId)
+	}
+
+	singleUseAddresses := getSingleUseAddresses(inboxId, accountId, url, token)
+	toAndFrom := getSendersToSingleUseAddresses(singleUseAddresses, spamId, accountId, url, token)
+
+	printAddresses(singleUseAddresses, toAndFrom)
+}
+
+// getApiToken looks for a JMAP_TOKEN environment variable, and asks for the token to be
+// entered interactively as a fallback.
+func getApiToken() string {
 	token := os.Getenv("JMAP_TOKEN")
 	if len(token) == 0 {
 		fmt.Println(
@@ -44,22 +66,12 @@ func main() {
 			panic(err)
 		}
 	}
+	return token
+}
 
-	sessionReq, err := http.NewRequest(
-		"GET",
-		"https://api.fastmail.com/jmap/session",
-		nil,
-	)
-	if err != nil {
-		panic(err)
-	}
-	sessionReq.Header.Set("Content-Type", "application/json")
-	sessionReq.Header.Set(
-		"Authorization",
-		fmt.Sprintf("Bearer %s", token),
-	)
-
-	sessionRes, err := http.DefaultClient.Do(sessionReq)
+// getApiSession makes a web request to create an API session.
+func getApiSession(token string) map[string]any {
+	sessionRes, err := makeJmapCall(ApiSessionUrl, token, "")
 	if err != nil {
 		panic(err)
 	}
@@ -75,22 +87,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	return session
+}
 
+// getAccountIdAndApiUrl makes a web request to get the user's account ID and the API
+// session URL to use for all further web requests.
+func getAccountIdAndApiUrl(token string) (string, string) {
+	session := getApiSession(token)
 	primaryAccounts := session["primaryAccounts"].(map[string]any)
-	accountID := primaryAccounts["urn:ietf:params:jmap:mail"].(string)
+	accountId := primaryAccounts["urn:ietf:params:jmap:mail"].(string)
 	if verbose {
-		fmt.Printf("account ID: %s\n", accountID)
+		fmt.Printf("account ID: %s\n", accountId)
 	}
 	url := session["apiUrl"].(string)
+	return accountId, url
+}
 
-	// TODO: try to combine these into one web request.
-	inboxID := getMailboxID(`{"role": "inbox"}`, accountID, url, token)
-	spamID := getMailboxID(`{"name": "spam"}`, accountID, url, token)
-	if verbose {
-		fmt.Printf("inbox ID: %s\n", inboxID)
-		fmt.Printf("spam folder ID: %s\n", spamID)
-	}
-
+// getInboxEmailsRecipients makes a web request for the names and addresses in the "to"
+// fields of all emails in the inbox.
+func getInboxEmailsRecipients(inboxId, accountId, url, token string) []any {
 	emailsReqBody := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -118,24 +133,29 @@ func main() {
 				]
 			]
 		}
-	`, accountID, inboxID, accountID)
-	// TODO: above, add properties:
-	// "properties": ["from", "to", "cc", "bcc"]
+	`, accountId, inboxId, accountId)
 
 	emailsList := getEmailsList(emailsReqBody, url, token)
+	return emailsList
+}
+
+// getSingleUseAddresses makes a web request for emails in the inbox, and from them
+// finds the receiving single-use addresses. The email addresses are sorted
+// alphabetically and deduplicated.
+func getSingleUseAddresses(inboxId, accountId, url, token string) []string {
+	emailsList := getInboxEmailsRecipients(inboxId, accountId, url, token)
 
 	var singleUseAddresses []string
 	for _, emailAny := range emailsList {
 		email := emailAny.(map[string]any)
 		// if ccList := email["cc"]; ccList != nil {
-		// 	slog.Warn("CC field detected (and ignored): %s", email["cc"])
+		// 	slog.Warn("CC field detected and ignored: %s", email["cc"])
 		// }
 		// if bccListAny := email["bcc"]; bccListAny != nil {
-		// 	slog.Warn("BCC field detected (and ignored): %s", email["bcc"])
+		// 	slog.Warn("BCC field detected and ignored: %s", email["bcc"])
 		// }
 		// if fromListAny := email["from"]; fromListAny != nil {
-		// 	fromList := fromListAny.([]any)
-		// 	singleUseAddresses = appendIfSingleUse(singleUseAddresses, fromList)
+		// 	slog.Info("from field ignored")
 		// }
 		if toListAny := email["to"]; toListAny != nil {
 			toList := toListAny.([]any)
@@ -149,8 +169,18 @@ func main() {
 		fmt.Printf("%d single-use addresses found:\n", len(singleUseAddresses))
 		fmt.Println("\t" + strings.Join(singleUseAddresses, "\n\t"))
 	}
-	singleUseAddressesStr := strings.Join(singleUseAddresses, "\"}, {\"to\": \"")
 
+	return singleUseAddresses
+}
+
+// getSendersToSingleUseAddresses makes a web request for the "to" and "from" fields of
+// all emails outside the spam folder received through single-use addresses. Each item
+// of the returned map has keys of the "to" addresses, and values of slices of the
+// corresponding "from" addresses.
+func getSendersToSingleUseAddresses(
+	singleUseAddresses []string, spamId, accountId, url, token string,
+) map[string][]string {
+	singleUseAddressesStr := strings.Join(singleUseAddresses, "\"}, {\"to\": \"")
 	emailsReq2Body := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -189,7 +219,7 @@ func main() {
 				]
 			]
 		}
-	`, accountID, spamID, singleUseAddressesStr, accountID)
+	`, accountId, spamId, singleUseAddressesStr, accountId)
 
 	emailsList2 := getEmailsList(emailsReq2Body, url, token)
 
@@ -205,6 +235,17 @@ func main() {
 		}
 	}
 
+	return toAndFrom
+}
+
+// printAddresses prints all the single-use email addresses and the addresses they
+// received emails from. The "from" addresses are sorted alphabetically and
+// deduplicated.
+func printAddresses(singleUseAddresses []string, toAndFrom map[string][]string) {
+	if len(singleUseAddresses) == 0 {
+		fmt.Println("No single-use addresses found.")
+		return
+	}
 	fmt.Printf(
 		"Your inbox's %d single-use addresses and those they received from:\n",
 		len(singleUseAddresses),
@@ -220,14 +261,17 @@ func main() {
 		printedYet = true
 	}
 	if !printedYet {
-		fmt.Println("No single-use addresses with multiple recipients found.")
+		fmt.Println("None of the single-use addresses have received emails.")
 	}
 }
 
+// appendIfSingleUse finds the recipient email address in emailDataList, which is a
+// slice containing one map with keys "name" and "email". If the email address's domain
+// is that of an email protection service, the address is added to the slice of
+// single-use addresses. All email addresses are lowercased.
 func appendIfSingleUse(singleUseAddresses []string, emailDataList []any) []string {
 	if len(emailDataList) > 1 {
-		slog.Error("Multiple recipients currently not supported")
-		return singleUseAddresses
+		panic("Multiple recipients currently not supported")
 	}
 	to := emailDataList[0].(map[string]any)
 	address := strings.ToLower(to["email"].(string))
@@ -238,7 +282,10 @@ func appendIfSingleUse(singleUseAddresses []string, emailDataList []any) []strin
 	return singleUseAddresses
 }
 
-func getMailboxID(filterObjStr, accountID, url, token string) string {
+// getMailboxId makes a web request for the unique ID of a mailbox. filterObjStr is a
+// string of a JSON object that is used as the value of the "filter" item in the JMAP
+// "Mailbox/query" method.
+func getMailboxId(filterObjStr, accountId, url, token string) string {
 	mailboxReqBody := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -253,8 +300,8 @@ func getMailboxID(filterObjStr, accountID, url, token string) string {
 				]
 			]
 		}
-	`, accountID, filterObjStr)
-	mailboxRes, err := makeJMAPCall(url, token, mailboxReqBody)
+	`, accountId, filterObjStr)
+	mailboxRes, err := makeJmapCall(url, token, mailboxReqBody)
 	if err != nil {
 		panic(err)
 	}
@@ -271,12 +318,15 @@ func getMailboxID(filterObjStr, accountID, url, token string) string {
 		panic(err)
 	}
 	mailboxMethodRes := mailbox["methodResponses"].([]any)
-	mailboxID := mailboxMethodRes[0].([]any)[1].(map[string]any)["ids"].([]any)[0].(string)
-	return mailboxID
+	mailboxId := mailboxMethodRes[0].([]any)[1].(map[string]any)["ids"].([]any)[0].(string)
+	return mailboxId
 }
 
+// getEmailsList makes a web request with a JMAP API request body, the API's url, and an
+// API token to get an array of email data objects from a JMAP server. The expected JMAP
+// methods are "Email/query" followed by "Email/get" (two methods total).
 func getEmailsList(emailsReqBody, url, token string) []any {
-	emailsRes, err := makeJMAPCall(url, token, emailsReqBody)
+	emailsRes, err := makeJmapCall(url, token, emailsReqBody)
 	if err != nil {
 		panic(err)
 	}
@@ -300,8 +350,14 @@ func getEmailsList(emailsReqBody, url, token string) []any {
 	return emailsList
 }
 
-func makeJMAPCall(url, token, body string) (*http.Response, error) {
-	bodyReader := bytes.NewReader([]byte(body))
+// makeJmapCall takes an API url, API token, and request body to make a POST request
+// with content type "application/json" using the default http client. If the given body
+// string is empty, nil is sent as the body.
+func makeJmapCall(url, token, body string) (*http.Response, error) {
+	var bodyReader *bytes.Reader
+	if len(body) > 0 {
+		bodyReader = bytes.NewReader([]byte(body))
+	}
 	req, err := http.NewRequest(
 		"POST",
 		url,
