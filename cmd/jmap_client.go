@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package cmd
 
 import (
 	"bytes"
@@ -29,7 +29,7 @@ func getAccountIdAndApiUrl(token string) (string, string) {
 	session := getApiSession(token)
 	primaryAccounts := session["primaryAccounts"].(map[string]any)
 	accountId := primaryAccounts["urn:ietf:params:jmap:mail"].(string)
-	if verbose {
+	if Verbose {
 		fmt.Printf("account ID: %s\n", accountId)
 	}
 	url := session["apiUrl"].(string)
@@ -124,7 +124,7 @@ func getInboxAndSpamIds(accountId, url, token string) (string, string) {
 		spamId = ufo["id"].(string)
 	}
 
-	if verbose {
+	if Verbose {
 		fmt.Printf("inbox ID: %s\n", inboxId)
 		fmt.Printf("spam folder ID: %s\n", spamId)
 	}
