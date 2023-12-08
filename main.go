@@ -71,7 +71,7 @@ func getApiToken() string {
 
 // getApiSession makes a web request to create an API session.
 func getApiSession(token string) map[string]any {
-	sessionRes, err := makeJmapCall(ApiSessionUrl, token, "")
+	sessionRes, err := makeJmapCall("GET", ApiSessionUrl, token, "")
 	if err != nil {
 		panic(err)
 	}
@@ -301,7 +301,7 @@ func getMailboxId(filterObjStr, accountId, url, token string) string {
 			]
 		}
 	`, accountId, filterObjStr)
-	mailboxRes, err := makeJmapCall(url, token, mailboxReqBody)
+	mailboxRes, err := makeJmapCall("POST", url, token, mailboxReqBody)
 	if err != nil {
 		panic(err)
 	}
@@ -326,7 +326,7 @@ func getMailboxId(filterObjStr, accountId, url, token string) string {
 // API token to get an array of email data objects from a JMAP server. The expected JMAP
 // methods are "Email/query" followed by "Email/get" (two methods total).
 func getEmailsList(emailsReqBody, url, token string) []any {
-	emailsRes, err := makeJmapCall(url, token, emailsReqBody)
+	emailsRes, err := makeJmapCall("POST", url, token, emailsReqBody)
 	if err != nil {
 		panic(err)
 	}
@@ -350,19 +350,17 @@ func getEmailsList(emailsReqBody, url, token string) []any {
 	return emailsList
 }
 
-// makeJmapCall takes an API url, API token, and request body to make a POST request
-// with content type "application/json" using the default http client. If the given body
-// string is empty, nil is sent as the body.
-func makeJmapCall(url, token, body string) (*http.Response, error) {
-	var bodyReader *bytes.Reader
+// makeJmapCall makes a web request with content type "application/json" using the
+// default http client. If the given body string is empty, nil is sent as the body.
+func makeJmapCall(httpMethod, url, token, body string) (*http.Response, error) {
+	var req *http.Request
+	var err error
 	if len(body) > 0 {
-		bodyReader = bytes.NewReader([]byte(body))
+		bodyReader := bytes.NewReader([]byte(body))
+		req, err = http.NewRequest(httpMethod, url, bodyReader)
+	} else {
+		req, err = http.NewRequest(httpMethod, url, nil)
 	}
-	req, err := http.NewRequest(
-		"POST",
-		url,
-		bodyReader,
-	)
 	if err != nil {
 		return nil, err
 	}
