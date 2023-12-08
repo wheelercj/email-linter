@@ -37,18 +37,9 @@ func main() {
 	godotenv.Load()
 	token := getApiToken()
 	accountId, url := getAccountIdAndApiUrl(token)
-
-	// TODO: try to combine these into one web request.
-	inboxId := getMailboxId(`{"role": "inbox"}`, accountId, url, token)
-	spamId := getMailboxId(`{"name": "spam"}`, accountId, url, token)
-	if verbose {
-		fmt.Printf("inbox ID: %s\n", inboxId)
-		fmt.Printf("spam folder ID: %s\n", spamId)
-	}
-
+	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
 	singleUseAddresses := getSingleUseAddresses(inboxId, accountId, url, token)
 	toAndFrom := getSendersToSingleUseAddresses(singleUseAddresses, spamId, accountId, url, token)
-
 	printAddresses(singleUseAddresses, toAndFrom)
 }
 
@@ -282,11 +273,9 @@ func appendIfSingleUse(singleUseAddresses []string, emailDataList []any) []strin
 	return singleUseAddresses
 }
 
-// getMailboxId makes a web request for the unique ID of a mailbox. filterObjStr is a
-// string of a JSON object that is used as the value of the "filter" item in the JMAP
-// "Mailbox/query" method.
-func getMailboxId(filterObjStr, accountId, url, token string) string {
-	mailboxReqBody := fmt.Sprintf(`
+// getInboxAndSpamIds makes a web request for the IDs of the inbox and the spam folder.
+func getInboxAndSpamIds(accountId, url, token string) (string, string) {
+	mailboxesReqBody := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
 			"methodCalls": [
@@ -294,32 +283,70 @@ func getMailboxId(filterObjStr, accountId, url, token string) string {
 					"Mailbox/query",
 					{
 						"accountId": "%s",
-						"filter": %s
+						"filter": {
+							"operator": "OR",
+							"conditions": [
+								{"role": "inbox"},
+								{"name": "spam"}
+							]
+						}
 					},
 					"0"
+				],
+				[
+					"Mailbox/get",
+					{
+						"accountId": "%s",
+						"#ids": {
+							"resultOf": "0",
+							"name": "Mailbox/query",
+							"path": "/ids"
+						},
+						"properties": ["id", "role", "name"]
+					},
+					"1"
 				]
 			]
 		}
-	`, accountId, filterObjStr)
-	mailboxRes, err := makeJmapCall("POST", url, token, mailboxReqBody)
+	`, accountId, accountId)
+	mailboxesRes, err := makeJmapCall("POST", url, token, mailboxesReqBody)
 	if err != nil {
 		panic(err)
 	}
-	mailboxBytes, err := io.ReadAll(mailboxRes.Body)
+	mailboxesBytes, err := io.ReadAll(mailboxesRes.Body)
 	if err != nil {
 		panic(err)
 	}
-	if bytes.Equal(mailboxBytes, []byte("Malformed JSON")) {
+	if bytes.Equal(mailboxesBytes, []byte("Malformed JSON")) {
 		panic("Malformed JSON")
 	}
-	var mailbox map[string]any
-	err = json.Unmarshal(mailboxBytes, &mailbox)
+	var mailboxes map[string]any
+	err = json.Unmarshal(mailboxesBytes, &mailboxes)
 	if err != nil {
 		panic(err)
 	}
-	mailboxMethodRes := mailbox["methodResponses"].([]any)
-	mailboxId := mailboxMethodRes[0].([]any)[1].(map[string]any)["ids"].([]any)[0].(string)
-	return mailboxId
+	mailboxesMethodRes := mailboxes["methodResponses"].([]any)
+	inboxAndSpam := mailboxesMethodRes[1].([]any)[1].(map[string]any)["list"].([]any)
+
+	var inboxId, spamId string
+	ufo := inboxAndSpam[0].(map[string]any) // unidentified folder object
+	otherUfo := inboxAndSpam[1].(map[string]any)
+	ufoName := strings.ToLower(ufo["name"].(string))
+	ufoRole := strings.ToLower(ufo["role"].(string))
+	if ufoName == "inbox" || ufoRole == "inbox" {
+		inboxId = ufo["id"].(string)
+		spamId = otherUfo["id"].(string)
+	} else {
+		inboxId = otherUfo["id"].(string)
+		spamId = ufo["id"].(string)
+	}
+
+	if verbose {
+		fmt.Printf("inbox ID: %s\n", inboxId)
+		fmt.Printf("spam folder ID: %s\n", spamId)
+	}
+
+	return inboxId, spamId
 }
 
 // getEmailsList makes a web request with a JMAP API request body, the API's url, and an
