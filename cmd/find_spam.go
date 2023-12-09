@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strings"
@@ -144,21 +145,28 @@ func printAddresses(singleUseAddresses []string, toAndFrom map[string][]string) 
 		fmt.Println("No single-use addresses found.")
 		return
 	}
-	fmt.Printf(
-		"Your inbox's %d single-use addresses and those they received from:\n",
-		len(singleUseAddresses),
-	)
-	var printedYet bool
+
 	for to := range toAndFrom {
 		slices.Sort(toAndFrom[to])
 		toAndFrom[to] = slices.Compact(toAndFrom[to])
-		fmt.Println(to)
-		for _, from := range toAndFrom[to] {
-			fmt.Printf("\t%s\n", from)
-		}
-		printedYet = true
 	}
-	if !printedYet {
-		fmt.Println("None of the single-use addresses have received emails.")
+
+	if PrintJson {
+		bytes, err := json.Marshal(toAndFrom)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(string(bytes))
+	} else {
+		fmt.Printf(
+			"Your inbox's %d single-use addresses and those they received from:\n",
+			len(singleUseAddresses),
+		)
+		for to := range toAndFrom {
+			fmt.Println(to)
+			for _, from := range toAndFrom[to] {
+				fmt.Printf("\t%s\n", from)
+			}
+		}
 	}
 }

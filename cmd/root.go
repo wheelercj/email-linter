@@ -24,7 +24,7 @@ import (
 var Verbose bool
 var ApiSessionUrl string
 var Domains string
-var Json bool
+var PrintJson bool
 
 func runFunc(cmd *cobra.Command, args []string) {
 	token := getApiToken()
@@ -38,7 +38,7 @@ func runFunc(cmd *cobra.Command, args []string) {
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:     "email-linter",
-	Version: "0.0.1",
+	Version: "0.0.2",
 	Run:     runFunc,
 	Short:   "Easily find spam and phishing emails received at single-use email addresses.",
 }
@@ -72,14 +72,13 @@ func init() {
 		"duck.com mozmail.com icloud.com",
 		"email protection service domains to search for",
 	)
-	// TODO
-	// rootCmd.Flags().BoolVarP(
-	// 	&Json,
-	// 	"json",
-	// 	"j",
-	// 	false,
-	// 	"print output as JSON",
-	// )
+	rootCmd.Flags().BoolVarP(
+		&PrintJson,
+		"json",
+		"j",
+		false,
+		"print output as JSON",
+	)
 }
 
 // getApiToken looks for a API_TOKEN environment variable, or asks for the token to be
