@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -27,7 +27,10 @@ var Domains string
 var PrintJson bool
 
 func runFunc(cmd *cobra.Command, args []string) {
-	token := getApiToken()
+	token := os.Getenv("API_TOKEN")
+	if len(token) == 0 {
+		token = authorizeWithOauth()
+	}
 	accountId, url := getAccountIdAndApiUrl(token)
 	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
 	singleUseAddresses := getSingleUseAddresses(inboxId, accountId, url, token)
@@ -81,19 +84,23 @@ func init() {
 	)
 }
 
-// getApiToken looks for a API_TOKEN environment variable, or asks for the token to be
-// entered interactively as a fallback.
-func getApiToken() string {
-	token := os.Getenv("API_TOKEN")
-	if len(token) == 0 {
-		fmt.Println(
-			"Create an API token and either create a API_TOKEN env var and run this",
-			"again, or enter the token here:",
-		)
-		_, err := fmt.Scanln(&token)
-		if err != nil {
-			panic(err)
-		}
+func authorizeWithOauth() string {
+	oauthUrl, err := url.Parse("https://api.fastmail.com/oauth/authorize")
+	if err != nil {
+		panic(err)
 	}
+
+	values := oauthUrl.Query()
+	values.Add("client_id", TODO)
+	values.Add("redirect_uri", TODO)
+	values.Add("response_type", "code")
+	values.Add("scope", TODO)
+	values.Add("code_challenge", TODO)
+	values.Add("code_verifier", TODO)
+	values.Add("code_challenge_method", "S256")
+	values.Add("state", TODO)
+
+	oauthUrl.RawQuery = values.Encode()
+
 	return token
 }

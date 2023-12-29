@@ -18,11 +18,11 @@ Email address protection services make it easy to use a unique email address for
 2. Find all emails outside the spam folder those single-use addresses have ever received.
 3. List each single-use address and the addresses they have received from. With these, you can search your inbox for suspicious emails and decide what to do with them.
 
-This app does not store or send any of your data anywhere.
+This app does not store any of your data, and only communicates with Fastmail's servers.
 
-## API token
+## OAuth or API token
 
-This app needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens). The token can be entered when you run the app or by creating an environment variable named `API_TOKEN`, such as with the Bash command `API_TOKEN="your token here"`, or the PowerShell command `$env:API_TOKEN="your token here"`.
+Fastmail OAuth is supported. If you don't use Fastmail, you will need to get a read-only JMAP API token for this app to securely connect to your account. Provide the token by creating an environment variable named `API_TOKEN`, such as with the Bash command `API_TOKEN="your token here"`, or the PowerShell command `$env:API_TOKEN="your token here"`. If an `API_TOKEN` variable does not exist when the app runs, it will assume you are using Fastmail.
 
 ## dev resources
 
@@ -33,3 +33,5 @@ Here are some resources that were helpful while creating this app.
 * [Fastmail's JMAP samples](https://github.com/fastmail/JMAP-Samples/tree/main)
 * [JMAP Crash Course](https://jmap.io/crash-course.html)
 * [the JMAP specs and RFCs](https://jmap.io/spec.html)
+* [OAuth 2 Explained In Simple Terms](https://www.youtube.com/watch?v=ZV5yTm4pT8g)
+* [Fastmail OAuth](https://www.fastmail.com/for-developers/oauth/)
