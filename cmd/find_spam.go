@@ -110,11 +110,7 @@ func getSendersToSingleUseAddresses(
 		email := emailAny.(map[string]any)
 		to := strings.ToLower(email["to"].([]any)[0].(map[string]any)["email"].(string))
 		from := strings.ToLower(email["from"].([]any)[0].(map[string]any)["email"].(string))
-		if _, ok := toAndFrom[to]; ok {
-			toAndFrom[to] = append(toAndFrom[to], from)
-		} else {
-			toAndFrom[to] = []string{from}
-		}
+		toAndFrom[to] = append(toAndFrom[to], from)
 	}
 
 	return toAndFrom
