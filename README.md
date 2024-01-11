@@ -22,7 +22,7 @@ This app does not store or send any of your data anywhere.
 
 ## API token
 
-This app needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens). The token can be entered when you run the app or by creating an environment variable named `API_TOKEN`, such as with the Bash command `API_TOKEN="your token here"`, or the PowerShell command `$env:API_TOKEN="your token here"`.
+This app needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens). The token can be entered when you run the app or by creating an environment variable named `JMAP_TOKEN`, such as with the Bash command `JMAP_TOKEN="your token here"`, or the PowerShell command `$env:JMAP_TOKEN="your token here"`.
 
 ## dev resources
 

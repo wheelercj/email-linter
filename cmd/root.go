@@ -81,13 +81,13 @@ func init() {
 	)
 }
 
-// getApiToken looks for a API_TOKEN environment variable, or asks for the token to be
+// getApiToken looks for a JMAP_TOKEN environment variable, or asks for the token to be
 // entered interactively as a fallback.
 func getApiToken() string {
-	token := os.Getenv("API_TOKEN")
+	token := os.Getenv("JMAP_TOKEN")
 	if len(token) == 0 {
 		fmt.Println(
-			"Create an API token and either create a API_TOKEN env var and run this",
+			"Create an API token and either create a JMAP_TOKEN env var and run this",
 			"again, or enter the token here:",
 		)
 		_, err := fmt.Scanln(&token)
