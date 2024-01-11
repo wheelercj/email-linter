@@ -22,7 +22,15 @@ This app does not store or send any of your data anywhere.
 
 ## API token
 
-This app needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens). The token can be entered when you run the app or by creating an environment variable named `JMAP_TOKEN`, such as with the Bash command `JMAP_TOKEN="your token here"`, or the PowerShell command `$env:JMAP_TOKEN="your token here"`.
+This app needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens).
+
+**Pick one.** The token can be entered in any one of three ways:
+
+* **When you run the app**, it will let you enter the token interactively if you don't use any of the other options.
+* **Create a file** for the token with the location and name `~/.config/email-linter/jmap_token` (`~` is the user folder, such as `C:/Users/chris`).
+* **Create an environment variable** named `JMAP_TOKEN`, such as with the Bash command `JMAP_TOKEN="your token here"`, or the PowerShell command `$env:JMAP_TOKEN="your token here"`. This option is generally NOT recommended for security reasons (any process can easily read environment variables).
+
+If both a token file and environment variable are provided, the file is used.
 
 ## dev resources
 

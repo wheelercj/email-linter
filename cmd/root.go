@@ -15,8 +15,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"log/slog"
 	"os"
+	"os/user"
+	"path"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -38,7 +43,7 @@ func runFunc(cmd *cobra.Command, args []string) {
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:     "email-linter",
-	Version: "0.0.3",
+	Version: "0.0.4",
 	Run:     runFunc,
 	Short:   "Easily find spam and phishing emails received at single-use email addresses.",
 }
@@ -81,19 +86,78 @@ func init() {
 	)
 }
 
-// getApiToken looks for a JMAP_TOKEN environment variable, or asks for the token to be
-// entered interactively as a fallback.
+// getApiToken looks for and returns a JMAP token. It first looks for
+// `~/.config/email-linter/jmap_token`. If a token is not found there, it checks for a
+// JMAP_TOKEN environment variable. If this does not exist either, it asks for the token
+// to be entered interactively.
 func getApiToken() string {
-	token := os.Getenv("JMAP_TOKEN")
+	var token string
+
+	// Look for a token file named `~/.config/email-linter/jmap_token`.
+	tokenFilePath, err := expandTilde("~/.config/email-linter/jmap_token")
+	if err != nil {
+		slog.Warn(err.Error())
+	} else {
+		isFile, err := fileExists(tokenFilePath)
+		if err != nil {
+			slog.Warn(err.Error())
+		} else if isFile {
+			bytes, err := os.ReadFile(tokenFilePath)
+			if err != nil {
+				slog.Warn(err.Error())
+			} else if len(bytes) > 0 {
+				token = string(bytes)
+			}
+		}
+	}
+
+	// Look for a token env var named `JMAP_TOKEN`.
 	if len(token) == 0 {
-		fmt.Println(
-			"Create an API token and either create a JMAP_TOKEN env var and run this",
-			"again, or enter the token here:",
+		token = os.Getenv("JMAP_TOKEN")
+	}
+
+	// Ask for the token to be entered interactively.
+	if len(token) == 0 {
+		fmt.Print(
+			`Create a read-only JMAP API token and either:
+  * put it in a file named ~/.config/email-linter/jmap_token
+  * or put it in a environment variable named JMAP_TOKEN
+  * or enter the token here: `,
 		)
 		_, err := fmt.Scanln(&token)
 		if err != nil {
 			panic(err)
 		}
 	}
+
 	return token
+}
+
+// fileExists determines whether a file exists.
+func fileExists(filePath string) (bool, error) {
+	if _, err := os.Stat(filePath); err == nil {
+		return true, nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	} else {
+		return false, err
+	}
+}
+
+// expandTilde replaces any leading `~/` in filePath with the current user's home
+// folder. Any backslashes are replaced with forward slashes. If filePath does not start
+// with `~/`, it is returned unchaged (unless it had backslashes replaced).
+func expandTilde(filePath string) (string, error) {
+	filePath = strings.ReplaceAll(filePath, "\\", "/")
+	if !strings.HasPrefix(filePath, "~/") {
+		return filePath, nil
+	}
+	filePath = strings.TrimPrefix(filePath, "~/")
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	filePath = path.Join(u.HomeDir, filePath)
+	filePath = strings.ReplaceAll(filePath, "\\", "/")
+	return filePath, nil
 }
