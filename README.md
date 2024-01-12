@@ -8,8 +8,8 @@ Easily find spam and phishing emails received at single-use email addresses. Thi
 
 Either:
 
-* run `go get github.com/wheelercj/email-linter`
-* or [download here](https://github.com/wheelercj/email-linter/releases). Binaries are available for several platforms. Optionally, you can add the executable file's path to your computer's PATH environment variable to make the app easier to run.
+* run `go install github.com/wheelercj/email-linter@latest` and then `email-linter --help`
+* or [download a zipped executable file](https://github.com/wheelercj/email-linter/releases), unzip it, and run the app with `./email-linter --help`
 
 ## what are single-use email addresses?
 
