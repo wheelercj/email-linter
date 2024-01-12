@@ -1,4 +1,4 @@
-module email-linter
+module github.com/wheelercj/email-linter
 
 go 1.21
 

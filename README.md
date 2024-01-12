@@ -6,7 +6,10 @@ Easily find spam and phishing emails received at single-use email addresses. Thi
 
 ## download
 
-[Download here](https://github.com/wheelercj/email-linter/releases). Binaries are available for several platforms. Optionally, you can add the executable file's path to your computer's PATH environment variable to make the app easier to run.
+Either:
+
+* run `go get github.com/wheelercj/email-linter`
+* or [download here](https://github.com/wheelercj/email-linter/releases). Binaries are available for several platforms. Optionally, you can add the executable file's path to your computer's PATH environment variable to make the app easier to run.
 
 ## what are single-use email addresses?
 

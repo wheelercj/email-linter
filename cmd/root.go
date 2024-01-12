@@ -43,7 +43,7 @@ func runFunc(cmd *cobra.Command, args []string) {
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:     "email-linter",
-	Version: "0.0.4",
+	Version: "0.0.5",
 	Run:     runFunc,
 	Short:   "Easily find spam and phishing emails received at single-use email addresses.",
 }
