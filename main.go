@@ -14,7 +14,7 @@
 
 package main
 
-import "email-linter/cmd"
+import "github.com/wheelercj/email-linter/cmd"
 
 func main() {
 	cmd.Execute()
