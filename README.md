@@ -21,7 +21,7 @@ Email address protection services make it easy to use a unique email address for
 
 1. First, email-linter finds all emails in your inbox that went through an email protection service.
 2. Next, it finds all emails outside your spam folder those single-use addresses have ever received.
-3. Then it lists each single-use address and the addresses they have received from. This makes it easy to spot suspicious senders so you can easily search your inbox for malicious emails and decide what to do with them.
+3. Then it lists each single-use address and the addresses they have received from. This makes it simple to spot suspicious senders so you can easily search your inbox for malicious emails and decide what to do with them.
 
 This app does not store any of your data anywhere and only communicates with your email service.
 
