@@ -1,4 +1,6 @@
-# email linter
+# email-linter
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/wheelercj/email-linter.svg)](https://pkg.go.dev/github.com/wheelercj/email-linter)
 
 Easily find spam and phishing emails received at single-use email addresses. This command-line app currently works with Fastmail and any other email services that have a [JMAP](https://jmap.io/index.html) API.
 
@@ -17,19 +19,19 @@ Email address protection services make it easy to use a unique email address for
 
 ## how does it work?
 
-1. Find all emails in the inbox that went through an email protection service.
-2. Find all emails outside the spam folder those single-use addresses have ever received.
-3. List each single-use address and the addresses they have received from. With these, you can search your inbox for suspicious emails and decide what to do with them.
+1. First, email-linter finds all emails in your inbox that went through an email protection service.
+2. Next, it finds all emails outside your spam folder those single-use addresses have ever received.
+3. Then it lists each single-use address and the addresses they have received from. This makes it easy to spot suspicious senders so you can easily search your inbox for malicious emails and decide what to do with them.
 
-This app does not store or send any of your data anywhere.
+This app does not store any of your data anywhere and only communicates with your email service.
 
 ## API token
 
-This app needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens).
+email-linter needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens).
 
 **Pick one.** The token can be entered in any one of three ways:
 
-* **When you run the app**, it will let you enter the token interactively if you don't use any of the other options.
+* **When you run the app**, you can enter the token interactively if you haven't chosen any of the other options.
 * **Create a file** for the token with the location and name `~/.config/email-linter/jmap_token` (`~` is the user folder, such as `C:/Users/chris`).
 * **Create an environment variable** named `JMAP_TOKEN`, such as with the Bash command `JMAP_TOKEN="your token here"`, or the PowerShell command `$env:JMAP_TOKEN="your token here"`. This option is generally NOT recommended for security reasons (any process can easily read environment variables).
 
