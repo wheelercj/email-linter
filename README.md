@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/wheelercj/email-linter.svg)](https://pkg.go.dev/github.com/wheelercj/email-linter)
 
-Easily find spam and phishing emails received at single-use email addresses. This command-line app currently works with Fastmail and any other email services that have a [JMAP](https://jmap.io/index.html) API.
+Easily find spam and phishing emails received at [single-use email addresses](#what-are-single-use-email-addresses). This command-line app currently works with Fastmail and any other email services that have a [JMAP](https://jmap.io/index.html) API.
 
 ![demo](demo.png)
 
@@ -15,7 +15,7 @@ Either:
 
 ## what are single-use email addresses?
 
-Email address protection services make it easy to use a unique email address for each online account, increasing security and reducing spam. Some examples of these services are [DuckDuckGo's Email Protection](https://duckduckgo.com/email), [1Password's Masked Email](https://1password.com/fastmail/), [Firefox Relay](https://relay.firefox.com/), and [iCloud+'s Hide My Email](https://support.apple.com/en-us/105078). Since the emails received by these addresses _should_ have predictable "from" fields, suspicious senders can be easily found. If needed, you can customize which email protection service addresses this app searches for. Use the `--help` option for more info.
+They are email addresses created to be used for only one account each. Whenever one of these email address starts receiving spam or phishing emails, you know exactly which account was compromised and can disconnect the address from your inbox. This way, you immediately stop receiving spam and never have to give your "real" email address to anyone you don't trust. Some examples of these email protection services are [DuckDuckGo's Email Protection](https://duckduckgo.com/email), [1Password's Masked Email](https://1password.com/fastmail/), [Firefox Relay](https://relay.firefox.com/), and [iCloud+'s Hide My Email](https://support.apple.com/en-us/105078). Since the emails received by these addresses _should_ have predictable "from" fields, suspicious senders can be easily found. If needed, you can customize which email protection service addresses this app searches for. Use the `--help` option for more info.
 
 ## how does it work?
 
@@ -33,7 +33,7 @@ email-linter needs a read-only JMAP API token to securely connect to your accoun
 
 * **When you run the app**, you can enter the token interactively if you haven't chosen any of the other options.
 * **Create a file** for the token with the location and name `~/.config/email-linter/jmap_token` (`~` is the user folder, such as `C:/Users/chris`).
-* **Create an environment variable** named `JMAP_TOKEN`, such as with the Bash command `JMAP_TOKEN="your token here"`, or the PowerShell command `$env:JMAP_TOKEN="your token here"`. This option is generally NOT recommended for security reasons (any process can easily read environment variables).
+* **Create an environment variable** named `JMAP_TOKEN`. This option is generally not recommended because any process can read the environment variable.
 
 If both a token file and environment variable are provided, the file is used.
 
