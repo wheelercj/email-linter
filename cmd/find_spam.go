@@ -26,6 +26,9 @@ import (
 // alphabetically and deduplicated.
 func getSingleUseAddresses(inboxId, accountId, url, token string) []string {
 	emailsList := getInboxEmailsRecipients(inboxId, accountId, url, token)
+	if len(emailsList) == 0 {
+		return []string{}
+	}
 
 	var singleUseAddresses []string
 	for _, emailAny := range emailsList {
@@ -43,6 +46,9 @@ func getSingleUseAddresses(inboxId, accountId, url, token string) []string {
 			toList := toListAny.([]any)
 			singleUseAddresses = appendIfSingleUse(singleUseAddresses, toList)
 		}
+	}
+	if len(singleUseAddresses) == 0 {
+		return []string{}
 	}
 
 	slices.Sort(singleUseAddresses)

@@ -36,6 +36,10 @@ func runFunc(cmd *cobra.Command, args []string) {
 	accountId, url := getAccountIdAndApiUrl(token)
 	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
 	singleUseAddresses := getSingleUseAddresses(inboxId, accountId, url, token)
+	if len(singleUseAddresses) == 0 {
+		fmt.Println("No single-use addresses found")
+		return
+	}
 	toAndFrom := getSendersToSingleUseAddresses(singleUseAddresses, spamId, accountId, url, token)
 	printAddresses(singleUseAddresses, toAndFrom)
 }
