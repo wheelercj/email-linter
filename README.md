@@ -29,7 +29,7 @@ This app does not store any of your data anywhere and only communicates with you
 
 email-linter needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens).
 
-**Pick one.** The token can be entered in any one of three ways:
+**Choose one.** The token can be entered in any one of three ways:
 
 * **When you run the app**, you can enter the token interactively if you haven't chosen any of the other options.
 * **Create a file** for the token with the location and name `~/.config/email-linter/jmap_token` (`~` is the user folder, such as `C:/Users/chris`).
