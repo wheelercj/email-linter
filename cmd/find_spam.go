@@ -17,20 +17,21 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"slices"
 	"strings"
 )
 
-// getSingleUseAddresses makes a web request for emails in the inbox, and from them
-// finds the receiving single-use addresses. The email addresses are sorted
+// getDisposableAddresses makes a web request for emails in the inbox, and from them
+// finds the receiving disposable addresses. The email addresses are sorted
 // alphabetically and deduplicated.
-func getSingleUseAddresses(inboxId, accountId, url, token string) []string {
+func getDisposableAddresses(inboxId, accountId, url, token string) []string {
 	emailsList := getInboxEmailsRecipients(inboxId, accountId, url, token)
 	if len(emailsList) == 0 {
-		return []string{}
+		return nil
 	}
 
-	var singleUseAddresses []string
+	var disposableAddresses []string
 	for _, emailAny := range emailsList {
 		email := emailAny.(map[string]any)
 		// if ccList := email["cc"]; ccList != nil {
@@ -44,31 +45,31 @@ func getSingleUseAddresses(inboxId, accountId, url, token string) []string {
 		// }
 		if toListAny := email["to"]; toListAny != nil {
 			toList := toListAny.([]any)
-			singleUseAddresses = appendIfSingleUse(singleUseAddresses, toList)
+			disposableAddresses = appendIfDisposable(disposableAddresses, toList)
 		}
 	}
-	if len(singleUseAddresses) == 0 {
-		return []string{}
+	if len(disposableAddresses) == 0 {
+		return nil
 	}
 
-	slices.Sort(singleUseAddresses)
-	singleUseAddresses = slices.Compact(singleUseAddresses)
+	slices.Sort(disposableAddresses)
+	disposableAddresses = slices.Compact(disposableAddresses)
 	if Verbose {
-		fmt.Printf("%d single-use addresses found:\n", len(singleUseAddresses))
-		fmt.Println("\t" + strings.Join(singleUseAddresses, "\n\t"))
+		fmt.Printf("%d disposable addresses found:\n", len(disposableAddresses))
+		fmt.Println("\t" + strings.Join(disposableAddresses, "\n\t"))
 	}
 
-	return singleUseAddresses
+	return disposableAddresses
 }
 
-// getSendersToSingleUseAddresses makes a web request for the "to" and "from" fields of
-// all emails outside the spam folder received through single-use addresses. Each item
+// getSendersToDisposableAddresses makes a web request for the "to" and "from" fields of
+// all emails outside the spam folder received through disposable addresses. Each item
 // of the returned map has keys of the "to" addresses, and values of slices of the
 // corresponding "from" addresses.
-func getSendersToSingleUseAddresses(
-	singleUseAddresses []string, spamId, accountId, url, token string,
+func getSendersToDisposableAddresses(
+	disposableAddresses []string, spamId, accountId, url, token string,
 ) map[string][]string {
-	singleUseAddressesStr := strings.Join(singleUseAddresses, "\"}, {\"to\": \"")
+	disposableAddressesStr := strings.Join(disposableAddresses, "\"}, {\"to\": \"")
 	emailsReqBody := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -107,7 +108,7 @@ func getSendersToSingleUseAddresses(
 				]
 			]
 		}
-	`, accountId, spamId, singleUseAddressesStr, accountId)
+	`, accountId, spamId, disposableAddressesStr, accountId)
 
 	emailsList := getEmailsList(emailsReqBody, url, token)
 
@@ -122,11 +123,11 @@ func getSendersToSingleUseAddresses(
 	return toAndFrom
 }
 
-// appendIfSingleUse finds the recipient email address in emailDataList, which is a
+// appendIfDisposable finds the recipient email address in emailDataList, which is a
 // slice containing one map with keys "name" and "email". If the email address's domain
 // is that of an email protection service, the address is added to the slice of
-// single-use addresses. All email addresses are lowercased.
-func appendIfSingleUse(singleUseAddresses []string, emailDataList []any) []string {
+// disposable addresses. All email addresses are lowercased.
+func appendIfDisposable(disposableAddresses []string, emailDataList []any) []string {
 	if len(emailDataList) > 1 {
 		panic("Multiple recipients currently not supported")
 	}
@@ -134,18 +135,18 @@ func appendIfSingleUse(singleUseAddresses []string, emailDataList []any) []strin
 	address := strings.ToLower(to["email"].(string))
 	domain := strings.Split(address, "@")[1]
 	if strings.Contains(Domains, domain) {
-		singleUseAddresses = append(singleUseAddresses, address)
+		disposableAddresses = append(disposableAddresses, address)
 	}
-	return singleUseAddresses
+	return disposableAddresses
 }
 
-// printAddresses prints all the single-use email addresses and the addresses they
+// printAddresses prints all the disposable email addresses and the addresses they
 // received emails from. The "from" addresses are sorted alphabetically and
 // deduplicated.
-func printAddresses(singleUseAddresses []string, toAndFrom map[string][]string) {
-	if len(singleUseAddresses) == 0 {
-		fmt.Println("No single-use addresses found.")
-		return
+func printAddresses(disposableAddresses []string, toAndFrom map[string][]string) {
+	if len(disposableAddresses) == 0 {
+		fmt.Fprint(os.Stderr, "No disposable addresses found in your inbox")
+		os.Exit(0)
 	}
 
 	for to := range toAndFrom {
@@ -160,10 +161,16 @@ func printAddresses(singleUseAddresses []string, toAndFrom map[string][]string) 
 		}
 		fmt.Println(string(bytes))
 	} else {
-		fmt.Printf(
-			"Your inbox's %d single-use addresses and those they received from:\n",
-			len(singleUseAddresses),
-		)
+		if len(disposableAddresses) == 1 {
+			fmt.Printf(
+				"Your inbox's 1 disposable address and those it received from:\n",
+			)
+		} else {
+			fmt.Printf(
+				"Your inbox's %d disposable addresses and those they received from:\n",
+				len(disposableAddresses),
+			)
+		}
 		for to := range toAndFrom {
 			fmt.Println(to)
 			for _, from := range toAndFrom[to] {

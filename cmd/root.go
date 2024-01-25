@@ -35,13 +35,13 @@ func runFunc(cmd *cobra.Command, args []string) {
 	token := getApiToken()
 	accountId, url := getAccountIdAndApiUrl(token)
 	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
-	singleUseAddresses := getSingleUseAddresses(inboxId, accountId, url, token)
-	if len(singleUseAddresses) == 0 {
-		fmt.Fprint(os.Stderr, "No single-use addresses found")
+	disposableAddresses := getDisposableAddresses(inboxId, accountId, url, token)
+	if len(disposableAddresses) == 0 {
+		fmt.Fprint(os.Stderr, "No disposable addresses found in your inbox")
 		os.Exit(0)
 	}
-	toAndFrom := getSendersToSingleUseAddresses(singleUseAddresses, spamId, accountId, url, token)
-	printAddresses(singleUseAddresses, toAndFrom)
+	toAndFrom := getSendersToDisposableAddresses(disposableAddresses, spamId, accountId, url, token)
+	printAddresses(disposableAddresses, toAndFrom)
 }
 
 // rootCmd represents the base command when called without any subcommands.
@@ -49,7 +49,7 @@ var rootCmd = &cobra.Command{
 	Use:     "email-linter",
 	Version: "v0.0.5",
 	Run:     runFunc,
-	Short:   "Easily find spam and phishing emails received at single-use email addresses.",
+	Short:   "Easily find spam and phishing emails received at disposable email addresses.",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
