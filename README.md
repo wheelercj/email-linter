@@ -46,6 +46,7 @@ Here are some resources that were helpful while creating this app.
 * [Fastmail's JMAP samples](https://github.com/fastmail/JMAP-Samples/tree/main)
 * [JMAP Crash Course](https://jmap.io/crash-course.html)
 * [the JMAP specs and RFCs](https://jmap.io/spec.html)
+* [How and why we built Masked Email with JMAP](https://blog.1password.com/making-masked-email-with-jmap/) by Madeline Hanley at 1Password
 * [spf13/cobra](https://github.com/spf13/cobra)
 * [GoReleaser](https://goreleaser.com/)
 * [GoReleaser Action](https://github.com/marketplace/actions/goreleaser-action)
