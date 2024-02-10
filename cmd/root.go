@@ -29,6 +29,7 @@ import (
 var Verbose bool
 var ApiSessionUrl string
 var Domains string
+var MaxFrom int
 var PrintJson bool
 
 func runFunc(cmd *cobra.Command, args []string) {
@@ -80,6 +81,13 @@ func init() {
 		"d",
 		"duck.com mozmail.com icloud.com",
 		"email protection service domains to search for",
+	)
+	rootCmd.Flags().IntVarP(
+		&MaxFrom,
+		"maxFrom",
+		"f",
+		5,
+		"max unique senders to a disposable email address",
 	)
 	rootCmd.Flags().BoolVarP(
 		&PrintJson,

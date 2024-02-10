@@ -142,7 +142,9 @@ func appendIfDisposable(disposableAddresses []string, emailDataList []any) []str
 
 // printAddresses prints all the disposable email addresses and the addresses they
 // received emails from. The "from" addresses are sorted alphabetically and
-// deduplicated.
+// deduplicated. If JSON is not being printed and there are more than a certain number
+// of unique senders to one address, the number of senders is printed instead of their
+// addresses.
 func printAddresses(disposableAddresses []string, toAndFrom map[string][]string) {
 	if len(disposableAddresses) == 0 {
 		fmt.Fprint(os.Stderr, "No disposable addresses found in your inbox")
@@ -173,8 +175,17 @@ func printAddresses(disposableAddresses []string, toAndFrom map[string][]string)
 		}
 		for to := range toAndFrom {
 			fmt.Println(to)
-			for _, from := range toAndFrom[to] {
-				fmt.Printf("\t%s\n", from)
+			froms := toAndFrom[to]
+			if len(froms) > MaxFrom {
+				fmt.Printf(
+					"\tReceived emails from %d unique addresses. Use `-f %d` if you want to see them.\n",
+					len(froms),
+					len(froms),
+				)
+			} else {
+				for _, from := range froms {
+					fmt.Printf("\t%s\n", from)
+				}
 			}
 		}
 	}
