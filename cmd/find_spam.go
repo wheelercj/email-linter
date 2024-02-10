@@ -116,8 +116,10 @@ func getSendersToDisposableAddresses(
 	for _, emailAny := range emailsList {
 		email := emailAny.(map[string]any)
 		to := strings.ToLower(email["to"].([]any)[0].(map[string]any)["email"].(string))
-		from := strings.ToLower(email["from"].([]any)[0].(map[string]any)["email"].(string))
-		toAndFrom[to] = append(toAndFrom[to], from)
+		if slices.Contains(disposableAddresses, to) {
+			from := strings.ToLower(email["from"].([]any)[0].(map[string]any)["email"].(string))
+			toAndFrom[to] = append(toAndFrom[to], from)
+		}
 	}
 
 	return toAndFrom
