@@ -125,20 +125,29 @@ func getSendersToDisposableAddresses(
 	return toAndFrom
 }
 
-// appendIfDisposable finds the recipient email address in emailDataList, which is a
-// slice containing one map with keys "name" and "email". If the email address's domain
-// is that of an email protection service, the address is added to the slice of
-// disposable addresses. All email addresses are lowercased.
+// appendIfDisposable finds in one email's data any and all recipient email addresses
+// that are disposable email addresses. If multiple disposable recipient addresses are
+// found, a warning is printed. emailDataList is a slice of recipient email addresses;
+// it contains maps with keys "name" and "email". All email addresses are lowercased.
 func appendIfDisposable(disposableAddresses []string, emailDataList []any) []string {
-	if len(emailDataList) > 1 {
-		panic("Multiple recipients currently not supported")
+	var found []string
+	for _, emailData := range emailDataList {
+		to := emailData.(map[string]any)
+		toAddress := strings.ToLower(to["email"].(string))
+		toDomain := strings.Split(toAddress, "@")[1]
+		if strings.Contains(Domains, toDomain) {
+			disposableAddresses = append(disposableAddresses, toAddress)
+			found = append(found, toAddress)
+		}
 	}
-	to := emailDataList[0].(map[string]any)
-	address := strings.ToLower(to["email"].(string))
-	domain := strings.Split(address, "@")[1]
-	if strings.Contains(Domains, domain) {
-		disposableAddresses = append(disposableAddresses, address)
+
+	if len(found) > 1 {
+		fmt.Printf(
+			"Warning: multiple disposable addresses found in one email: %v\n",
+			found,
+		)
 	}
+
 	return disposableAddresses
 }
 
