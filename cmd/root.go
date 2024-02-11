@@ -79,7 +79,7 @@ func init() {
 		&Domains,
 		"domains",
 		"d",
-		"duck.com mozmail.com icloud.com",
+		"fastmail.com duck.com mozmail.com icloud.com passmail.com passmail.net",
 		"email protection service domains to search for",
 	)
 	rootCmd.Flags().IntVarP(
