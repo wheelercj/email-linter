@@ -87,7 +87,7 @@ func init() {
 		"maxFrom",
 		"f",
 		5,
-		"max unique senders to a disposable email address",
+		"max unique senders to a disposable email address; does not apply to JSON output",
 	)
 	rootCmd.Flags().BoolVarP(
 		&PrintJson,
