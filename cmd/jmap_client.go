@@ -190,6 +190,18 @@ func getEmailsList(emailsReqBody, url, token string) []any {
 	}
 	emailsMethodRes := emails["methodResponses"].([]any)
 	emailsGetRes := emailsMethodRes[1].([]any)
+
+	if emailsGetRes[0].(string) == "error" {
+		errMap := emailsGetRes[1].(map[string]any)
+		errType := errMap["type"].(string)
+		errDesc := errMap["description"].(string)
+		if errType == "requestTooLarge" {
+			panic("Too many emails were requested from the email server")
+		} else {
+			panic(fmt.Sprintf("%s error from email server: %s", errType, errDesc))
+		}
+	}
+
 	emailsMap := emailsGetRes[1].(map[string]any)
 	emailsList := emailsMap["list"].([]any)
 	return emailsList
