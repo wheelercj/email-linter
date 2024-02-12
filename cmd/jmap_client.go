@@ -156,7 +156,7 @@ func getInboxEmailsRecipients(inboxId, accountId, url, token string) []any {
 							"name": "Email/query",
 							"path": "/ids"
 						},
-						"properties": ["to"]
+						"properties": ["to", "cc", "bcc"]
 					},
 					"1"
 				]

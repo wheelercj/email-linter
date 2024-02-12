@@ -34,18 +34,14 @@ func getDisposableAddrs(inboxId, accountId, url, token string) []string {
 	var disposableAddrs []string
 	for _, emailAny := range emailsList {
 		email := emailAny.(map[string]any)
-		// if ccList := email["cc"]; ccList != nil {
-		// 	slog.Warn("CC field detected and ignored: %s", email["cc"])
-		// }
-		// if bccListAny := email["bcc"]; bccListAny != nil {
-		// 	slog.Warn("BCC field detected and ignored: %s", email["bcc"])
-		// }
-		// if fromListAny := email["from"]; fromListAny != nil {
-		// 	slog.Info("from field ignored")
-		// }
 		if toListAny := email["to"]; toListAny != nil {
-			toList := toListAny.([]any)
-			disposableAddrs = appendIfDisposable(disposableAddrs, toList)
+			disposableAddrs = appendIfDisposable(disposableAddrs, toListAny.([]any))
+		}
+		if ccListAny := email["cc"]; ccListAny != nil {
+			disposableAddrs = appendIfDisposable(disposableAddrs, ccListAny.([]any))
+		}
+		if bccListAny := email["bcc"]; bccListAny != nil {
+			disposableAddrs = appendIfDisposable(disposableAddrs, bccListAny.([]any))
 		}
 	}
 	if len(disposableAddrs) == 0 {
@@ -62,14 +58,16 @@ func getDisposableAddrs(inboxId, accountId, url, token string) []string {
 	return disposableAddrs
 }
 
-// getSendersToDisposableAddrs makes a web request for the "to" and "from" fields of all
-// emails outside the spam folder received through disposable addresses. Each item of
-// the returned map has keys of the "to" addresses, and values of slices of the
-// corresponding "from" addresses.
+// getSendersToDisposableAddrs makes a web request for the "to", "cc", "bcc", and "from"
+// fields of all emails outside the spam folder received through disposable addresses.
+// Each item of the returned map has keys of the recipient addresses, and values of
+// slices of the corresponding "from" addresses.
 func getSendersToDisposableAddrs(
 	disposableAddrs []string, spamId, accountId, url, token string,
 ) map[string][]string {
-	disposableAddrsStr := strings.Join(disposableAddrs, "\"}, {\"to\": \"")
+	toDispAddrsStr := strings.Join(disposableAddrs, "\"}, {\"to\": \"")
+	ccDispAddrsStr := strings.Join(disposableAddrs, "\"}, {\"cc\": \"")
+	bccDispAddrsStr := strings.Join(disposableAddrs, "\"}, {\"bcc\": \"")
 	emailsReqBody := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -86,7 +84,7 @@ func getSendersToDisposableAddrs(
 								},
 								{
 									"operator": "OR",
-									"conditions": [{"to": "%s"}]
+									"conditions": [{"to": "%s"}, {"cc": "%s"}, {"bcc": "%s"}]
 								}
 							]
 						}
@@ -102,27 +100,58 @@ func getSendersToDisposableAddrs(
 							"name": "Email/query",
 							"path": "/ids"
 						},
-						"properties": ["to", "from"]
+						"properties": ["to", "cc", "bcc", "from"]
 					},
 					"1"
 				]
 			]
 		}
-	`, accountId, spamId, disposableAddrsStr, accountId)
+	`, accountId, spamId, toDispAddrsStr, ccDispAddrsStr, bccDispAddrsStr, accountId)
 
 	emailsList := getEmailsList(emailsReqBody, url, token)
 
 	toAndFrom := make(map[string][]string)
 	for _, emailAny := range emailsList {
 		email := emailAny.(map[string]any)
-		to := strings.ToLower(email["to"].([]any)[0].(map[string]any)["email"].(string))
-		if slices.Contains(disposableAddrs, to) {
-			from := strings.ToLower(email["from"].([]any)[0].(map[string]any)["email"].(string))
-			toAndFrom[to] = append(toAndFrom[to], from)
+		tos := getAddrs(email, "to")
+		ccs := getAddrs(email, "cc")
+		bccs := getAddrs(email, "bcc")
+		froms := getAddrs(email, "from")
+
+		for _, to := range tos {
+			if slices.Contains(disposableAddrs, to) {
+				toAndFrom[to] = append(toAndFrom[to], froms...)
+			}
+		}
+		for _, cc := range ccs {
+			if slices.Contains(disposableAddrs, cc) {
+				toAndFrom[cc] = append(toAndFrom[cc], froms...)
+			}
+		}
+		for _, bcc := range bccs {
+			if slices.Contains(disposableAddrs, bcc) {
+				toAndFrom[bcc] = append(toAndFrom[bcc], froms...)
+			}
 		}
 	}
 
 	return toAndFrom
+}
+
+// getAddrs gets email addresses from an email's sender and recipient data. The category
+// determines which email addresses; it can be "to", "cc", "bcc", or "from".
+func getAddrs(email map[string]any, category string) []string {
+	cat := email[category]
+	if cat == nil {
+		return nil
+	}
+
+	var addrs []string
+	for _, person := range cat.([]any) {
+		addrs = append(addrs, person.(map[string]any)["email"].(string))
+	}
+
+	return addrs
 }
 
 // appendIfDisposable finds in one email's recipients any and all email addresses that
