@@ -136,19 +136,46 @@ func appendIfDisposable(disposableAddrs []string, emailDataList []any) []string 
 		toAddress := strings.ToLower(to["email"].(string))
 		toDomain := strings.Split(toAddress, "@")[1]
 		if strings.Contains(Domains, toDomain) {
-			disposableAddrs = append(disposableAddrs, toAddress)
 			newDispAddrs = append(newDispAddrs, toAddress)
 		}
 	}
 
 	if len(newDispAddrs) > 1 {
+		newDispAddrs = removeNonUserAddrs(newDispAddrs)
+	}
+
+	disposableAddrs = append(disposableAddrs, newDispAddrs...)
+
+	return disposableAddrs
+}
+
+// removeNonUserAddrs attempts to remove from dispAddrs any email addresses that do not
+// belong to the user. dispAddrs is the disposable addresses in one email's recipient
+// addresses. If multiple disposable recipient addresses remain, a warning is printed.
+func removeNonUserAddrs(dispAddrs []string) []string {
+	// If the email was forwarded to a duck address, the recipient addresses will all
+	// have the same ending: the user's duck address.
+	var unique []string
+	for _, addr := range dispAddrs {
+		if strings.HasSuffix(addr, "@duck.com") && strings.Contains(addr, "_at_") {
+			tokens := strings.Split(addr, "_")
+			addr = tokens[len(tokens)-1]
+		}
+		if !slices.Contains(unique, addr) {
+			unique = append(unique, addr)
+		}
+	}
+
+	dispAddrs = unique
+
+	if len(dispAddrs) > 1 {
 		fmt.Printf(
 			"Warning: multiple disposable addresses found in one email: %v\n",
-			newDispAddrs,
+			dispAddrs,
 		)
 	}
 
-	return disposableAddrs
+	return dispAddrs
 }
 
 // printAddrs prints all the disposable email addresses and the addresses they received
