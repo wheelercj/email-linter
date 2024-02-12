@@ -132,9 +132,11 @@ func getInboxAndSpamIds(accountId, url, token string) (string, string) {
 	return inboxId, spamId
 }
 
-// getInboxEmailsRecipients makes a web request for the names and addresses in the "to"
-// fields of all emails in the inbox.
-func getInboxEmailsRecipients(inboxId, accountId, url, token string) []any {
+// getInboxEmailsRecipients makes a web request for the names and addresses of
+// recipients of up to a limit of email threads in the inbox and the total number of
+// email threads in the inbox. The emails are sorted newest first, ignoring emails from
+// the same thread.
+func getInboxEmailsRecipients(inboxId, accountId, url, token string) ([]any, int) {
 	emailsReqBody := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -143,7 +145,15 @@ func getInboxEmailsRecipients(inboxId, accountId, url, token string) []any {
 					"Email/query",
 					{
 						"accountId": "%s",
-						"filter": {"inMailbox": "%s"}
+						"filter": {"inMailbox": "%s"},
+						"sort": [{
+							"isAscending": false,
+							"property": "receivedAt"
+						}],
+						"collapseThreads": true,
+						"position": 0,
+						"limit": 100,
+						"calculateTotal": true
 					},
 					"0"
 				],
@@ -167,10 +177,11 @@ func getInboxEmailsRecipients(inboxId, accountId, url, token string) []any {
 	return getEmailsList(emailsReqBody, url, token)
 }
 
-// getEmailsList makes a web request to get an array of email data objects from a JMAP
-// server. The expected JMAP methods are "Email/query" followed by "Email/get" (two
-// methods total).
-func getEmailsList(emailsReqBody, url, token string) []any {
+// getEmailsList makes a web request to a JMAP server to get an array of email data
+// objects and the total number of email objects that match the query. The expected JMAP
+// methods are "Email/query" followed by "Email/get" (two methods total). The
+// "Email/query" method is expected to have the property `"calculateTotal": true`.
+func getEmailsList(emailsReqBody, url, token string) (emailsList []any, totalMatches int) {
 	emailsRes, err := makeJmapCall("POST", url, token, emailsReqBody)
 	if err != nil {
 		panic(err)
@@ -189,8 +200,15 @@ func getEmailsList(emailsReqBody, url, token string) []any {
 		panic(err)
 	}
 	emailsMethodRes := emails["methodResponses"].([]any)
+	emailsQueryRes := emailsMethodRes[0].([]any)
 	emailsGetRes := emailsMethodRes[1].([]any)
 
+	if emailsQueryRes[0].(string) == "error" {
+		errMap := emailsQueryRes[1].(map[string]any)
+		errType := errMap["type"].(string)
+		errDesc := errMap["description"].(string)
+		panic(fmt.Sprintf("%s error from email server: %s", errType, errDesc))
+	}
 	if emailsGetRes[0].(string) == "error" {
 		errMap := emailsGetRes[1].(map[string]any)
 		errType := errMap["type"].(string)
@@ -202,9 +220,11 @@ func getEmailsList(emailsReqBody, url, token string) []any {
 		}
 	}
 
+	totalMatches = int(emailsQueryRes[1].(map[string]any)["total"].(float64))
 	emailsMap := emailsGetRes[1].(map[string]any)
-	emailsList := emailsMap["list"].([]any)
-	return emailsList
+	emailsList = emailsMap["list"].([]any)
+
+	return emailsList, totalMatches
 }
 
 // getApiSession makes a web request to create an API session.

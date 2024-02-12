@@ -24,11 +24,20 @@ import (
 
 // getDisposableAddrs makes a web request for emails in the inbox, and from them finds
 // the receiving disposable addresses. The email addresses are sorted alphabetically and
-// deduplicated.
+// deduplicated. If the total number of email threads in the inbox is greater than the
+// number of emails retrieved and the output format is not JSON, a message is printed
+// explaining this.
 func getDisposableAddrs(inboxId, accountId, url, token string) []string {
-	emailsList := getInboxEmailsRecipients(inboxId, accountId, url, token)
+	emailsList, totalThreads := getInboxEmailsRecipients(inboxId, accountId, url, token)
 	if len(emailsList) == 0 {
 		return nil
+	}
+	if !PrintJson && totalThreads > len(emailsList) {
+		fmt.Printf(
+			"Looking for disposable addresses in the newest %d of %d email threads.",
+			len(emailsList),
+			totalThreads,
+		)
 	}
 
 	var disposableAddrs []string
@@ -61,7 +70,8 @@ func getDisposableAddrs(inboxId, accountId, url, token string) []string {
 // getSendersToDisposableAddrs makes a web request for the "to", "cc", "bcc", and "from"
 // fields of all emails outside the spam folder received through disposable addresses.
 // Each item of the returned map has keys of the recipient addresses, and values of
-// slices of the corresponding "from" addresses.
+// slices of the corresponding "from" addresses. If the number of matching emails goes
+// over a limit and the output format is not JSON, a message is printed explaining this.
 func getSendersToDisposableAddrs(
 	disposableAddrs []string, spamId, accountId, url, token string,
 ) map[string][]string {
@@ -87,7 +97,15 @@ func getSendersToDisposableAddrs(
 									"conditions": [{"to": "%s"}, {"cc": "%s"}, {"bcc": "%s"}]
 								}
 							]
-						}
+						},
+						"sort": [{
+							"isAscending": false,
+							"property": "receivedAt"
+						}],
+						"collapseThreads": true,
+						"position": 0,
+						"limit": 100,
+						"calculateTotal": true
 					},
 					"0"
 				],
@@ -108,7 +126,15 @@ func getSendersToDisposableAddrs(
 		}
 	`, accountId, spamId, toDispAddrsStr, ccDispAddrsStr, bccDispAddrsStr, accountId)
 
-	emailsList := getEmailsList(emailsReqBody, url, token)
+	emailsList, totalMatches := getEmailsList(emailsReqBody, url, token)
+
+	if !PrintJson && totalMatches > len(emailsList) {
+		fmt.Printf(
+			"Retrieved %d of %d emails received at disposable addresses.",
+			len(emailsList),
+			totalMatches,
+		)
+	}
 
 	toAndFrom := make(map[string][]string)
 	for _, emailAny := range emailsList {
