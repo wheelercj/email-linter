@@ -125,18 +125,20 @@ func getSendersToDisposableAddrs(
 	return toAndFrom
 }
 
-// appendIfDisposable finds in one email's data any and all recipient email addresses
-// that are disposable email addresses. If multiple disposable recipient addresses are
-// found, a warning is printed. emailDataList is a slice of recipient email addresses;
-// it contains maps with keys "name" and "email". All email addresses are lowercased.
-func appendIfDisposable(disposableAddrs []string, emailDataList []any) []string {
+// appendIfDisposable finds in one email's recipients any and all email addresses that
+// are disposable email addresses. recipientMaps is a slice of maps each with keys
+// "name" and "email" representing one recipient. This function lowercases all email
+// addresses. If multiple disposable recipient addresses are found and attempts to
+// determine which one belongs to the user do not completely succeed, a warning is
+// printed and multiple addresses are added to the return.
+func appendIfDisposable(disposableAddrs []string, recipientMaps []any) []string {
 	var newDispAddrs []string
-	for _, emailData := range emailDataList {
-		to := emailData.(map[string]any)
-		toAddress := strings.ToLower(to["email"].(string))
-		toDomain := strings.Split(toAddress, "@")[1]
-		if strings.Contains(Domains, toDomain) {
-			newDispAddrs = append(newDispAddrs, toAddress)
+	for _, recipientMap := range recipientMaps {
+		recipient := recipientMap.(map[string]any)
+		address := strings.ToLower(recipient["email"].(string))
+		domain := strings.Split(address, "@")[1]
+		if strings.Contains(Domains, domain) {
+			newDispAddrs = append(newDispAddrs, address)
 		}
 	}
 
