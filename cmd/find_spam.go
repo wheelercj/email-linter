@@ -22,16 +22,16 @@ import (
 	"strings"
 )
 
-// getDisposableAddresses makes a web request for emails in the inbox, and from them
-// finds the receiving disposable addresses. The email addresses are sorted
-// alphabetically and deduplicated.
-func getDisposableAddresses(inboxId, accountId, url, token string) []string {
+// getDisposableAddrs makes a web request for emails in the inbox, and from them finds
+// the receiving disposable addresses. The email addresses are sorted alphabetically and
+// deduplicated.
+func getDisposableAddrs(inboxId, accountId, url, token string) []string {
 	emailsList := getInboxEmailsRecipients(inboxId, accountId, url, token)
 	if len(emailsList) == 0 {
 		return nil
 	}
 
-	var disposableAddresses []string
+	var disposableAddrs []string
 	for _, emailAny := range emailsList {
 		email := emailAny.(map[string]any)
 		// if ccList := email["cc"]; ccList != nil {
@@ -45,31 +45,31 @@ func getDisposableAddresses(inboxId, accountId, url, token string) []string {
 		// }
 		if toListAny := email["to"]; toListAny != nil {
 			toList := toListAny.([]any)
-			disposableAddresses = appendIfDisposable(disposableAddresses, toList)
+			disposableAddrs = appendIfDisposable(disposableAddrs, toList)
 		}
 	}
-	if len(disposableAddresses) == 0 {
+	if len(disposableAddrs) == 0 {
 		return nil
 	}
 
-	slices.Sort(disposableAddresses)
-	disposableAddresses = slices.Compact(disposableAddresses)
+	slices.Sort(disposableAddrs)
+	disposableAddrs = slices.Compact(disposableAddrs)
 	if Verbose {
-		fmt.Printf("%d disposable addresses found:\n", len(disposableAddresses))
-		fmt.Println("\t" + strings.Join(disposableAddresses, "\n\t"))
+		fmt.Printf("%d disposable addresses found:\n", len(disposableAddrs))
+		fmt.Println("\t" + strings.Join(disposableAddrs, "\n\t"))
 	}
 
-	return disposableAddresses
+	return disposableAddrs
 }
 
-// getSendersToDisposableAddresses makes a web request for the "to" and "from" fields of
-// all emails outside the spam folder received through disposable addresses. Each item
-// of the returned map has keys of the "to" addresses, and values of slices of the
+// getSendersToDisposableAddrs makes a web request for the "to" and "from" fields of all
+// emails outside the spam folder received through disposable addresses. Each item of
+// the returned map has keys of the "to" addresses, and values of slices of the
 // corresponding "from" addresses.
-func getSendersToDisposableAddresses(
-	disposableAddresses []string, spamId, accountId, url, token string,
+func getSendersToDisposableAddrs(
+	disposableAddrs []string, spamId, accountId, url, token string,
 ) map[string][]string {
-	disposableAddressesStr := strings.Join(disposableAddresses, "\"}, {\"to\": \"")
+	disposableAddrsStr := strings.Join(disposableAddrs, "\"}, {\"to\": \"")
 	emailsReqBody := fmt.Sprintf(`
 		{
 			"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -108,7 +108,7 @@ func getSendersToDisposableAddresses(
 				]
 			]
 		}
-	`, accountId, spamId, disposableAddressesStr, accountId)
+	`, accountId, spamId, disposableAddrsStr, accountId)
 
 	emailsList := getEmailsList(emailsReqBody, url, token)
 
@@ -116,7 +116,7 @@ func getSendersToDisposableAddresses(
 	for _, emailAny := range emailsList {
 		email := emailAny.(map[string]any)
 		to := strings.ToLower(email["to"].([]any)[0].(map[string]any)["email"].(string))
-		if slices.Contains(disposableAddresses, to) {
+		if slices.Contains(disposableAddrs, to) {
 			from := strings.ToLower(email["from"].([]any)[0].(map[string]any)["email"].(string))
 			toAndFrom[to] = append(toAndFrom[to], from)
 		}
@@ -129,35 +129,34 @@ func getSendersToDisposableAddresses(
 // that are disposable email addresses. If multiple disposable recipient addresses are
 // found, a warning is printed. emailDataList is a slice of recipient email addresses;
 // it contains maps with keys "name" and "email". All email addresses are lowercased.
-func appendIfDisposable(disposableAddresses []string, emailDataList []any) []string {
-	var found []string
+func appendIfDisposable(disposableAddrs []string, emailDataList []any) []string {
+	var newDispAddrs []string
 	for _, emailData := range emailDataList {
 		to := emailData.(map[string]any)
 		toAddress := strings.ToLower(to["email"].(string))
 		toDomain := strings.Split(toAddress, "@")[1]
 		if strings.Contains(Domains, toDomain) {
-			disposableAddresses = append(disposableAddresses, toAddress)
-			found = append(found, toAddress)
+			disposableAddrs = append(disposableAddrs, toAddress)
+			newDispAddrs = append(newDispAddrs, toAddress)
 		}
 	}
 
-	if len(found) > 1 {
+	if len(newDispAddrs) > 1 {
 		fmt.Printf(
 			"Warning: multiple disposable addresses found in one email: %v\n",
-			found,
+			newDispAddrs,
 		)
 	}
 
-	return disposableAddresses
+	return disposableAddrs
 }
 
-// printAddresses prints all the disposable email addresses and the addresses they
-// received emails from. The "from" addresses are sorted alphabetically and
-// deduplicated. If JSON is not being printed and there are more than a certain number
-// of unique senders to one address, the number of senders is printed instead of their
-// addresses.
-func printAddresses(disposableAddresses []string, toAndFrom map[string][]string) {
-	if len(disposableAddresses) == 0 {
+// printAddrs prints all the disposable email addresses and the addresses they received
+// emails from. The "from" addresses are sorted alphabetically and deduplicated. If JSON
+// is not being printed and there are more than a certain number of unique senders to
+// one address, the number of senders is printed instead of their addresses.
+func printAddrs(disposableAddrs []string, toAndFrom map[string][]string) {
+	if len(disposableAddrs) == 0 {
 		fmt.Fprint(os.Stderr, "No disposable addresses found in your inbox")
 		os.Exit(0)
 	}
@@ -174,14 +173,14 @@ func printAddresses(disposableAddresses []string, toAndFrom map[string][]string)
 		}
 		fmt.Println(string(bytes))
 	} else {
-		if len(disposableAddresses) == 1 {
+		if len(disposableAddrs) == 1 {
 			fmt.Printf(
 				"Your inbox's 1 disposable address and those it received from:\n",
 			)
 		} else {
 			fmt.Printf(
 				"Your inbox's %d disposable addresses and those they received from:\n",
-				len(disposableAddresses),
+				len(disposableAddrs),
 			)
 		}
 		for to := range toAndFrom {

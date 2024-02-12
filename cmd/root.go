@@ -36,13 +36,13 @@ func runFunc(cmd *cobra.Command, args []string) {
 	token := getApiToken()
 	accountId, url := getAccountIdAndApiUrl(token)
 	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
-	disposableAddresses := getDisposableAddresses(inboxId, accountId, url, token)
-	if len(disposableAddresses) == 0 {
+	disposableAddrs := getDisposableAddrs(inboxId, accountId, url, token)
+	if len(disposableAddrs) == 0 {
 		fmt.Fprint(os.Stderr, "No disposable addresses found in your inbox")
 		os.Exit(0)
 	}
-	toAndFrom := getSendersToDisposableAddresses(disposableAddresses, spamId, accountId, url, token)
-	printAddresses(disposableAddresses, toAndFrom)
+	toAndFrom := getSendersToDisposableAddrs(disposableAddrs, spamId, accountId, url, token)
+	printAddrs(disposableAddrs, toAndFrom)
 }
 
 // rootCmd represents the base command when called without any subcommands.
