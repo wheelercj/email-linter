@@ -17,6 +17,10 @@ Either:
 
 They are email addresses created to be used for only one account each. Whenever one of these addresses starts receiving spam or phishing emails, you know exactly which account was compromised and can disconnect the address from your inbox. This way, you immediately stop receiving spam and never have to give your main email address to anyone you don't trust. Some examples of these email protection services are [DuckDuckGo's Email Protection](https://duckduckgo.com/email), [Fastmail's Masked Email](https://www.fastmail.help/hc/en-us/articles/4406536368911-Masked-Email), [Proton's hide-my-email aliases](https://proton.me/pass/aliases), [Firefox Relay](https://relay.firefox.com/), and [iCloud+'s Hide My Email](https://support.apple.com/en-us/105078). Since the emails received by these addresses _should_ have predictable "from" fields, suspicious senders can be easily found with email-linter. If needed, you can customize which email protection service addresses email-linter searches for. Use the `--help` option for more info.
 
+## why
+
+I got phished. Fortunately, it was a fake phishing email for training against phishing, but I learned to not look at emails while half-asleep and, more importantly, the sender's address was different from normal for the disposable address I used. Email services don't seem to consider that suspicious (at least not yet), and checking the sender's address manually for every email is tedious if you don't remember the correct sender address. email-linter automates checking sender addresses for you. I hope someday email services will make email-linter obsolete.
+
 ## how does it work?
 
 1. First, email-linter finds all emails in your inbox that went through an email protection service.
@@ -36,6 +40,32 @@ email-linter needs a read-only JMAP API token to securely connect to your accoun
 * **Create an environment variable** named `JMAP_TOKEN`. This option is generally not recommended because any process can read the environment variable.
 
 If both a token file and environment variable are provided, the file is used.
+
+## caveat
+
+Emails with multiple recipients usually don't say which address is yours. Sometimes there are patterns in the recipient addresses that hint at the answer, and email-linter looks for some of those, but sometimes there are not. This means there's a chance email-linter could say someone else's address is yours. If this happens to you but you see a pattern in the recipient addresses email-linter could use to improve its output, please let me know by [creating a new issue](https://github.com/wheelercj/email-linter/issues/new)!
+
+I've considered letting users enter their email addresses, but I doubt anyone who really puts email protection services to good use would want to be constantly updating the list.
+
+**Example:**
+
+When an email is forwarded to a duck address, all the recipient addresses are changed to include the duck address. For example, let's say these are the email's original recipient addresses, and that one of them is yours:
+
+```
+alex@hotmail.com
+sue@gmail.com
+bob@icloud.com
+```
+
+If your duck address the email is forwarded to is `a1b2c3@duck.com`, then DuckDuckGo's email protection service will change them to:
+
+```
+alex_at_hotmail.com_a1b2c3@duck.com
+sue_at_gmail.com_a1b2c3@duck.com
+bob_at_icloud.com_a1b2c3@duck.com
+```
+
+Since email-linter can't tell which is yours, its output of recipient addresses includes only the last part, your duck address `a1b2c3@duck.com`.
 
 ## dev resources
 
