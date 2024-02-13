@@ -34,7 +34,7 @@ func getDisposableAddrs(inboxId, accountId, url, token string) []string {
 	}
 	if !PrintJson && totalThreads > len(emailsList) {
 		fmt.Printf(
-			"Looking for disposable addresses in the newest %d of %d email threads.",
+			"Looking for disposable addresses in the newest %d of %d email threads.\n",
 			len(emailsList),
 			totalThreads,
 		)
@@ -130,7 +130,7 @@ func getSendersToDisposableAddrs(
 
 	if !PrintJson && totalMatches > len(emailsList) {
 		fmt.Printf(
-			"Retrieved %d of %d emails received at disposable addresses.",
+			"Retrieved %d of %d emails received at disposable addresses.\n",
 			len(emailsList),
 			totalMatches,
 		)
