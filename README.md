@@ -71,7 +71,7 @@ Since email-linter can't tell which is yours, its output of recipient addresses 
 
 Here are some resources that were helpful while creating this app.
 
-* [intro to Go](https://wheelercj.github.io/notes/pages/20221122173910.html)
+* [intro to Go](https://til.chriswheeler.dev/intro-to-go/)
 * [Integrating with Fastmail](https://www.fastmail.com/for-developers/integrating-with-fastmail/)
 * [Fastmail's JMAP samples](https://github.com/fastmail/JMAP-Samples/tree/main)
 * [JMAP Crash Course](https://jmap.io/crash-course.html)
