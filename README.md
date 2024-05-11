@@ -2,9 +2,11 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/wheelercj/email-linter.svg)](https://pkg.go.dev/github.com/wheelercj/email-linter)
 
-Easily find spam and phishing emails received at [disposable email addresses](#what-are-disposable-email-addresses). This command-line app currently works with [Fastmail](https://www.fastmail.com/features/), [Topicbox](https://www.topicbox.com/), and any other email services that have a [JMAP](https://jmap.io/index.html) API. See more examples of these services [here](https://jmap.io/software.html).
+Easily find spam and phishing emails received at [disposable email addresses](#what-are-disposable-email-addresses). This command line app currently works with [Fastmail](https://www.fastmail.com/features/), [Topicbox](https://www.topicbox.com/), and any other email services that have a [JMAP](https://jmap.io/index.html) API. See more examples of these services [here](https://jmap.io/software.html).
 
-![demo](demo.png)
+![demo.png](demo.png)
+
+email-linter lists each of your disposable addresses and all the addresses they have received from so you can quickly spot suspicious senders.
 
 ## download
 
