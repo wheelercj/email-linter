@@ -51,7 +51,7 @@ func makeJmapCall(httpMethod, url, token, body string) (*http.Response, error) {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", strings.TrimSpace(token)))
 	return http.DefaultClient.Do(req)
 }
 
