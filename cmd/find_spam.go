@@ -241,7 +241,7 @@ func removeNonUserAddrs(dispAddrs []string) []string {
 // one address, the number of senders is printed instead of their addresses.
 func printAddrs(disposableAddrs []string, toAndFrom map[string][]string) {
 	if len(disposableAddrs) == 0 {
-		fmt.Fprint(os.Stderr, "No disposable addresses found in your inbox")
+		fmt.Fprintln(os.Stderr, "No disposable addresses found in your inbox")
 		os.Exit(0)
 	}
 

@@ -38,7 +38,7 @@ func runFunc(cmd *cobra.Command, args []string) {
 	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
 	disposableAddrs := getDisposableAddrs(inboxId, accountId, url, token)
 	if len(disposableAddrs) == 0 {
-		fmt.Fprint(os.Stderr, "No disposable addresses found in your inbox")
+		fmt.Fprintln(os.Stderr, "No disposable addresses found in your inbox")
 		os.Exit(0)
 	}
 	toAndFrom := getSendersToDisposableAddrs(disposableAddrs, spamId, accountId, url, token)
