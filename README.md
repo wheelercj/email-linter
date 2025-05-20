@@ -1,4 +1,4 @@
-# email-linter
+# Email Linter
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/wheelercj/email-linter.svg)](https://pkg.go.dev/github.com/wheelercj/email-linter)
 
@@ -6,7 +6,7 @@ Easily find spam and phishing emails received at [disposable email addresses](#w
 
 ![demo.png](demo.png)
 
-email-linter lists each of your disposable addresses and all the addresses they have received from so you can quickly spot suspicious senders.
+Email Linter lists each of your disposable addresses and all the addresses they have received from so you can quickly spot suspicious senders.
 
 ## Download
 
@@ -17,25 +17,25 @@ Either:
 
 ## Privacy
 
-email-linter does not store any of your data anywhere and only communicates with your email service. There is a chance future versions of email-linter will store email addresses locally to work more efficiently and offer more features.
+Email Linter does not store any of your data anywhere and only communicates with your email service. There is a chance future versions of Email Linter will store email addresses locally to work more efficiently and offer more features.
 
 ## What are disposable email addresses?
 
-They are email addresses created to be used for only one account each. Whenever one of these addresses starts receiving spam or phishing emails, you know exactly which account was compromised and can disconnect the address from your inbox. This way, you immediately stop receiving spam and never have to give your main email address to anyone you don't trust. Some examples of these email protection services are [DuckDuckGo's Email Protection](https://duckduckgo.com/email), [Fastmail's Masked Email](https://www.fastmail.help/hc/en-us/articles/4406536368911-Masked-Email), [Proton's hide-my-email aliases](https://proton.me/pass/aliases), [Firefox Relay](https://relay.firefox.com/), and [iCloud+'s Hide My Email](https://support.apple.com/en-us/105078). Since the emails received by these addresses _should_ have predictable "from" fields, suspicious senders can be easily found with email-linter. If needed, you can customize which email protection service addresses email-linter searches for. Use the `--help` option for more info.
+They are email addresses created to be used for only one account each. Whenever one of these addresses starts receiving spam or phishing emails, you know exactly which account was compromised and can disconnect the address from your inbox. This way, you immediately stop receiving spam and never have to give your main email address to anyone you don't trust. Some examples of these email protection services are [DuckDuckGo's Email Protection](https://duckduckgo.com/email), [Fastmail's Masked Email](https://www.fastmail.help/hc/en-us/articles/4406536368911-Masked-Email), [Proton's hide-my-email aliases](https://proton.me/pass/aliases), [Firefox Relay](https://relay.firefox.com/), and [iCloud+'s Hide My Email](https://support.apple.com/en-us/105078). Since the emails received by these addresses _should_ have predictable "from" fields, suspicious senders can be easily found with Email Linter. If needed, you can customize which email protection service addresses to search for. Use the `--help` option for more info.
 
 ## Why
 
-I got phished. Fortunately, it was a fake phishing email for training against phishing, but I learned to not look at emails while half-asleep and, more importantly, the sender's address was different from normal for the disposable address I used. Email services don't seem to consider that suspicious (at least not yet), and checking the sender's address manually for every email is tedious if you don't remember the correct sender address. email-linter automates checking sender addresses for you. I hope someday email services will make email-linter obsolete.
+I got phished. Fortunately, it was a fake phishing email for training against phishing, but I learned to not look at emails while half-asleep and, more importantly, the sender's address was different from normal for the disposable address I used. Email services don't seem to consider that suspicious (at least not yet), and checking the sender's address manually for every email is tedious if you don't remember the correct sender address. Email Linter automates checking sender addresses for you. I hope email services will make it obsolete.
 
 ## How does it work?
 
-1. First, email-linter finds all emails in your inbox that went through an email protection service.
+1. First, Email Linter finds all emails in your inbox that went through an email protection service.
 2. Next, it finds all emails outside your spam folder those disposable addresses have ever received.
 3. Then it lists each disposable address and the addresses they have received from. This makes it simple to spot suspicious senders so you can easily search your inbox for malicious emails and decide what to do with them.
 
 ## API token
 
-email-linter needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens).
+Email Linter needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens).
 
 **Choose one.** The token can be entered in any one of three ways:
 
@@ -47,7 +47,7 @@ If both a token file and environment variable are provided, the file is used.
 
 ## Caveat
 
-Emails with multiple recipients usually don't say which address is yours. Sometimes there are patterns in the recipient addresses that hint at the answer, and email-linter looks for some of those, but sometimes there are not. This means there's a chance email-linter could say someone else's address is yours. If this happens to you but you see a pattern in the recipient addresses email-linter could use to improve its output, please let me know by [creating a new issue](https://github.com/wheelercj/email-linter/issues/new)!
+Emails with multiple recipients usually don't say which address is yours. Sometimes there are patterns in the recipient addresses that hint at the answer, and Email Linter looks for some of those, but sometimes there are not. This means there's a chance Email Linter could say someone else's address is yours. If this happens to you but you see a pattern in the recipient addresses that could be used to improve the output, please let me know by [creating a new issue](https://github.com/wheelercj/email-linter/issues/new)!
 
 I've considered letting users enter their email addresses, but I doubt anyone who really puts email protection services to good use would want to be constantly updating the list.
 
@@ -69,7 +69,7 @@ sue_at_gmail.com_a1b2c3@duck.com
 bob_at_icloud.com_a1b2c3@duck.com
 ```
 
-Since email-linter can't tell which is yours, its output of recipient addresses includes only the last part, your duck address `a1b2c3@duck.com`.
+Since Email Linter can't tell which is yours, its output of recipient addresses includes only the last part, your duck address `a1b2c3@duck.com`.
 
 ## Dev resources
 
