@@ -15,16 +15,16 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"log/slog"
 	"os"
-	"os/user"
-	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/zalando/go-keyring"
 )
+
+const serviceName = "email-linter"
+const userName = "awesome-person"
 
 var Verbose bool
 var ApiSessionUrl string
@@ -32,24 +32,30 @@ var Domains string
 var MaxFrom int
 var PrintJson bool
 
-func runFunc(cmd *cobra.Command, args []string) {
-	token := getApiToken()
+func runFunc(cmd *cobra.Command, args []string) error {
+	token, err := getApiToken()
+	if err != nil {
+		return err
+	}
+
 	accountId, url := getAccountIdAndApiUrl(token)
 	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
 	disposableAddrs := getDisposableAddrs(inboxId, accountId, url, token)
 	if len(disposableAddrs) == 0 {
-		fmt.Fprintln(os.Stderr, "No disposable addresses found in your inbox")
-		os.Exit(0)
+		return fmt.Errorf("no disposable addresses found in your inbox")
 	}
+
 	toAndFrom := getSendersToDisposableAddrs(disposableAddrs, spamId, accountId, url, token)
 	printAddrs(disposableAddrs, toAndFrom)
+
+	return nil
 }
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:     "email-linter",
-	Version: "v0.0.7",
-	Run:     runFunc,
+	Version: "v0.0.8",
+	RunE:    runFunc,
 	Short:   "Easily find spam and phishing emails received at disposable email addresses.",
 }
 
@@ -63,6 +69,8 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(logoutCmd)
+
 	rootCmd.Flags().BoolVar(
 		&Verbose,
 		"verbose",
@@ -98,78 +106,47 @@ func init() {
 	)
 }
 
-// getApiToken looks for and returns a JMAP token. It first looks for
-// `~/.config/email-linter/jmap_token`. If a token is not found there, it checks for a
-// JMAP_TOKEN environment variable. If this does not exist either, it asks for the token
-// to be entered interactively.
-func getApiToken() string {
-	var token string
-
-	// Look for a token file named `~/.config/email-linter/jmap_token`.
-	tokenFilePath, err := expandTilde("~/.config/email-linter/jmap_token")
-	if err != nil {
-		slog.Warn(err.Error())
-	} else {
-		isFile, err := fileExists(tokenFilePath)
-		if err != nil {
-			slog.Warn(err.Error())
-		} else if isFile {
-			bytes, err := os.ReadFile(tokenFilePath)
-			if err != nil {
-				slog.Warn(err.Error())
-			} else if len(bytes) > 0 {
-				token = string(bytes)
-			}
-		}
-	}
-
-	// Look for a token env var named `JMAP_TOKEN`.
-	if len(token) == 0 {
-		token = os.Getenv("JMAP_TOKEN")
+// getApiToken returns a JMAP token that is retrieved from either the
+// system's keyring or interactively from the user. If the user enters
+// the token interactively, they are asked whether they want to save it
+// into the system's keyring.
+func getApiToken() (string, error) {
+	token, err := keyring.Get(serviceName, userName)
+	if err == nil && len(token) > 0 {
+		return token, nil
+	} else if err != nil && err != keyring.ErrNotFound {
+		return "", err
 	}
 
 	// Ask for the token to be entered interactively.
-	if len(token) == 0 {
-		fmt.Print(
-			`Create a read-only JMAP API token and either:
-  * put it in a file named ~/.config/email-linter/jmap_token
-  * or put it in a environment variable named JMAP_TOKEN
-  * or enter the token here: `,
-		)
-		_, err := fmt.Scanln(&token)
+	for len(token) == 0 {
+		fmt.Print("Create a read-only JMAP API token and enter it here: ")
+		_, err = fmt.Scanln(&token)
 		if err != nil {
-			panic(err)
+			return "", err
+		}
+		token = strings.TrimSpace(token)
+	}
+
+	// Ask whether to save the token into the system's keyring.
+	var y_or_n string
+	for y_or_n != "y" && y_or_n != "n" {
+		fmt.Println("Would you like the token to be saved in your device's keyring? (y/n): ")
+		_, err = fmt.Scanln(&y_or_n)
+		if err != nil {
+			return "", err
+		}
+
+		y_or_n = strings.ToLower(y_or_n)
+	}
+
+	if y_or_n == "y" {
+		// Save the token into the system's keyring.
+		err = keyring.Set(serviceName, userName, token)
+		if err != nil {
+			return "", err
 		}
 	}
 
-	return token
-}
-
-// fileExists determines whether a file exists.
-func fileExists(filePath string) (bool, error) {
-	if _, err := os.Stat(filePath); err == nil {
-		return true, nil
-	} else if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	} else {
-		return false, err
-	}
-}
-
-// expandTilde replaces any leading `~/` in filePath with the current user's home
-// folder. Any backslashes are replaced with forward slashes. If filePath does not start
-// with `~/`, it is returned unchaged (unless it had backslashes replaced).
-func expandTilde(filePath string) (string, error) {
-	filePath = strings.ReplaceAll(filePath, "\\", "/")
-	if !strings.HasPrefix(filePath, "~/") {
-		return filePath, nil
-	}
-	filePath = strings.TrimPrefix(filePath, "~/")
-	u, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	filePath = path.Join(u.HomeDir, filePath)
-	filePath = strings.ReplaceAll(filePath, "\\", "/")
-	return filePath, nil
+	return token, nil
 }

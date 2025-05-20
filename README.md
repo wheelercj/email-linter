@@ -17,7 +17,7 @@ Either:
 
 ## Privacy
 
-Email Linter does not store any of your data anywhere and only communicates with your email service. There is a chance future versions of Email Linter will store email addresses locally to work more efficiently and offer more features.
+Email Linter communicates with your email service and optionally stores your API token in your device's keyring. No other communication nor storage takes place. There is a chance future versions of Email Linter will store email addresses locally to work more efficiently and offer more features.
 
 ## What are disposable email addresses?
 
@@ -37,13 +37,7 @@ I got phished. Fortunately, it was a fake phishing email for training against ph
 
 Email Linter needs a read-only JMAP API token to securely connect to your account. If you're using Fastmail, you can [create an API token here](https://www.fastmail.com/settings/security/tokens).
 
-**Choose one.** The token can be entered in any one of three ways:
-
-* **When you run the app**, you can enter the token interactively if you haven't chosen any of the other options.
-* **Create a file** for the token with the location and name `~/.config/email-linter/jmap_token` (`~` is the user folder, such as `C:/Users/chris`).
-* **Create an environment variable** named `JMAP_TOKEN`. This option is generally not recommended because any process can read the environment variable.
-
-If both a token file and environment variable are provided, the file is used.
+Email Linter will ask you to enter the token when you run it, and can optionally save the token in your device's keyring.
 
 ## Caveat
 
