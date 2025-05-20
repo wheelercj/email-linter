@@ -1,11 +1,12 @@
-# This is an example .goreleaser.yaml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
+# https://goreleaser.com
+
+version: 2
+
+project_name: email-linter
+
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
-    - go generate ./...
 builds:
   - env:
       - CGO_ENABLED=0
@@ -15,8 +16,8 @@ builds:
       - darwin
 
 archives:
-  - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of uname.
+  - formats: [ 'tar.gz' ]
+    # this name template makes the OS and Arch compatible with the results of uname
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -27,11 +28,11 @@ archives:
     # use zip for windows archives
     format_overrides:
     - goos: windows
-      format: zip
+      formats: [ 'zip' ]
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
