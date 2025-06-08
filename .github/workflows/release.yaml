@@ -21,7 +21,7 @@ jobs:
         with:
           go-version: 'stable'
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@5014328cd6593ee3d003b8857c57d519c77ead1a
+        uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552
         with:
           # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
