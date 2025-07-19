@@ -22,11 +22,10 @@ import (
 	"strings"
 )
 
-// getDisposableAddrs makes a web request for emails in the inbox, and from them finds
-// the receiving disposable addresses. The email addresses are sorted alphabetically and
-// deduplicated. If the total number of email threads in the inbox is greater than the
-// number of emails retrieved and the output format is not JSON, a message is printed
-// explaining this.
+// getDisposableAddrs makes a web request for emails in the inbox, and from them finds the
+// receiving disposable addresses. The email addresses are sorted alphabetically and deduplicated.
+// If the total number of email threads in the inbox is greater than the number of emails retrieved
+// and the output format is not JSON, a message is printed explaining this.
 func getDisposableAddrs(inboxId, accountId, url, token string) []string {
 	emailsList, totalThreads := getInboxEmailsRecipients(inboxId, accountId, url, token)
 	if len(emailsList) == 0 {
@@ -67,11 +66,11 @@ func getDisposableAddrs(inboxId, accountId, url, token string) []string {
 	return disposableAddrs
 }
 
-// getSendersToDisposableAddrs makes a web request for the "to", "cc", "bcc", and "from"
-// fields of all emails outside the spam folder received through disposable addresses.
-// Each item of the returned map has keys of the recipient addresses, and values of
-// slices of the corresponding "from" addresses. If the number of matching emails goes
-// over a limit and the output format is not JSON, a message is printed explaining this.
+// getSendersToDisposableAddrs makes a web request for the "to", "cc", "bcc", and "from" fields of
+// all emails outside the spam folder received through disposable addresses. Each item of the
+// returned map has keys of the recipient addresses, and values of slices of the corresponding
+// "from" addresses. If the number of matching emails goes over a limit and the output format is
+// not JSON, a message is printed explaining this.
 func getSendersToDisposableAddrs(
 	disposableAddrs []string, spamId, accountId, url, token string,
 ) map[string][]string {
@@ -164,8 +163,8 @@ func getSendersToDisposableAddrs(
 	return toAndFrom
 }
 
-// getAddrs gets email addresses from an email's sender and recipient data. The category
-// determines which email addresses; it can be "to", "cc", "bcc", or "from".
+// getAddrs gets email addresses from an email's sender and recipient data. The category determines
+// which email addresses; it can be "to", "cc", "bcc", or "from".
 func getAddrs(email map[string]any, category string) []string {
 	cat := email[category]
 	if cat == nil {
@@ -180,12 +179,11 @@ func getAddrs(email map[string]any, category string) []string {
 	return addrs
 }
 
-// appendIfDisposable finds in one email's recipients any and all email addresses that
-// are disposable email addresses. recipientMaps is a slice of maps each with keys
-// "name" and "email" representing one recipient. This function lowercases all email
-// addresses. If multiple disposable recipient addresses are found and attempts to
-// determine which one belongs to the user do not completely succeed, a warning is
-// printed and multiple addresses are added to the return.
+// appendIfDisposable finds in one email's recipients any and all email addresses that are
+// disposable email addresses. recipientMaps is a slice of maps each with keys "name" and "email"
+// representing one recipient. This function lowercases all email addresses. If multiple disposable
+// recipient addresses are found and attempts to determine which one belongs to the user do not
+// completely succeed, a warning is printed and multiple addresses are added to the return.
 func appendIfDisposable(disposableAddrs []string, recipientMaps []any) []string {
 	var newDispAddrs []string
 	for _, recipientMap := range recipientMaps {
@@ -206,12 +204,12 @@ func appendIfDisposable(disposableAddrs []string, recipientMaps []any) []string 
 	return disposableAddrs
 }
 
-// removeNonUserAddrs attempts to remove from dispAddrs any email addresses that do not
-// belong to the user. dispAddrs is the disposable addresses in one email's recipient
-// addresses. If multiple disposable recipient addresses remain, a warning is printed.
+// removeNonUserAddrs attempts to remove from dispAddrs any email addresses that do not belong to
+// the user. dispAddrs is the disposable addresses in one email's recipient addresses. If multiple
+// disposable recipient addresses remain, a warning is printed.
 func removeNonUserAddrs(dispAddrs []string) []string {
-	// If the email was forwarded to a duck address, the recipient addresses will all
-	// have the same ending: the user's duck address.
+	// If the email was forwarded to a duck address, the recipient addresses will all have the same
+	// ending: the user's duck address.
 	var unique []string
 	for _, addr := range dispAddrs {
 		if strings.HasSuffix(addr, "@duck.com") && strings.Contains(addr, "_at_") {
@@ -235,10 +233,10 @@ func removeNonUserAddrs(dispAddrs []string) []string {
 	return dispAddrs
 }
 
-// printAddrs prints all the disposable email addresses and the addresses they received
-// emails from. The "from" addresses are sorted alphabetically and deduplicated. If JSON
-// is not being printed and there are more than a certain number of unique senders to
-// one address, the number of senders is printed instead of their addresses.
+// printAddrs prints all the disposable email addresses and the addresses they received emails
+// from. The "from" addresses are sorted alphabetically and deduplicated. If JSON is not being
+// printed and there are more than a certain number of unique senders to one address, the number of
+// senders is printed instead of their addresses.
 func printAddrs(disposableAddrs []string, toAndFrom map[string][]string) {
 	if len(disposableAddrs) == 0 {
 		fmt.Fprintln(os.Stderr, "No disposable addresses found in your inbox")

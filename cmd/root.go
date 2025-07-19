@@ -59,8 +59,8 @@ var rootCmd = &cobra.Command{
 	Short:   "Easily find spam and phishing emails received at disposable email addresses.",
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute adds all child commands to the root command and sets flags appropriately. This is called
+// by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -106,10 +106,9 @@ func init() {
 	)
 }
 
-// getApiToken returns a JMAP token that is retrieved from either the
-// system's keyring or interactively from the user. If the user enters
-// the token interactively, they are asked whether they want to save it
-// into the system's keyring.
+// getApiToken returns a JMAP token that is retrieved from either the system's keyring or
+// interactively from the user. If the user enters the token interactively, they are asked whether
+// they want to save it into the system's keyring.
 func getApiToken() (string, error) {
 	token, err := keyring.Get(serviceName, userName)
 	if err == nil && len(token) > 0 {
