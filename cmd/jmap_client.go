@@ -23,8 +23,8 @@ import (
 	"strings"
 )
 
-// getAccountIdAndApiUrl makes a web request to get the user's account ID and the API
-// session URL to use for all further web requests.
+// getAccountIdAndApiUrl makes a web request to get the user's account ID and the API session URL
+// to use for all further web requests.
 func getAccountIdAndApiUrl(token string) (string, string) {
 	session := getApiSession(token)
 	primaryAccounts := session["primaryAccounts"].(map[string]any)
@@ -36,8 +36,8 @@ func getAccountIdAndApiUrl(token string) (string, string) {
 	return accountId, url
 }
 
-// makeJmapCall makes a web request with content type "application/json" using the
-// default http client. If the given body string is empty, nil is sent as the body.
+// makeJmapCall makes a web request with content type "application/json" using the default http
+// client. If the given body string is empty, nil is sent as the body.
 func makeJmapCall(httpMethod, url, token, body string) (*http.Response, error) {
 	var req *http.Request
 	var err error
@@ -132,10 +132,9 @@ func getInboxAndSpamIds(accountId, url, token string) (string, string) {
 	return inboxId, spamId
 }
 
-// getInboxEmailsRecipients makes a web request for the names and addresses of
-// recipients of up to a limit of email threads in the inbox and the total number of
-// email threads in the inbox. The emails are sorted newest first, ignoring emails from
-// the same thread.
+// getInboxEmailsRecipients makes a web request for the names and addresses of recipients of up to
+// a limit of email threads in the inbox and the total number of email threads in the inbox. The
+// emails are sorted newest first, ignoring emails from the same thread.
 func getInboxEmailsRecipients(inboxId, accountId, url, token string) ([]any, int) {
 	emailsReqBody := fmt.Sprintf(`
 		{
@@ -177,10 +176,10 @@ func getInboxEmailsRecipients(inboxId, accountId, url, token string) ([]any, int
 	return getEmailsList(emailsReqBody, url, token)
 }
 
-// getEmailsList makes a web request to a JMAP server to get an array of email data
-// objects and the total number of email objects that match the query. The expected JMAP
-// methods are "Email/query" followed by "Email/get" (two methods total). The
-// "Email/query" method is expected to have the property `"calculateTotal": true`.
+// getEmailsList makes a web request to a JMAP server to get an array of email data objects and the
+// total number of email objects that match the query. The expected JMAP methods are "Email/query"
+// followed by "Email/get" (two methods total). The "Email/query" method is expected to have the
+// property `"calculateTotal": true`.
 func getEmailsList(emailsReqBody, url, token string) (emailsList []any, totalMatches int) {
 	emailsRes, err := makeJmapCall("POST", url, token, emailsReqBody)
 	if err != nil {

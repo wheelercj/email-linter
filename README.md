@@ -2,11 +2,20 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/wheelercj/email-linter.svg)](https://pkg.go.dev/github.com/wheelercj/email-linter)
 
-Easily find spam and phishing emails received at [disposable email addresses](#what-are-disposable-email-addresses). This command line app currently works with [Fastmail](https://www.fastmail.com/features/), [Topicbox](https://www.topicbox.com/), and any other email services that have a [JMAP](https://jmap.io/index.html) API. See more examples of these services [here](https://jmap.io/software.html).
+Easily find spam and phishing emails received at [masked email addresses](#what-are-masked-email-addresses). This command line app currently works with [Fastmail](https://www.fastmail.com/features/), [Topicbox](https://www.topicbox.com/), and any other email services that have a [JMAP](https://jmap.io/index.html) API. See more examples of these services [here](https://jmap.io/software.html).
 
-![demo.png](demo.png)
+```
+$ email-linter
+Your inbox's 2 masked addresses and those they received from:
+abc123@duck.com
+        donotreply_at_email.schwab.com_abc123@duck.com
+        donotreply_at_mail.schwab.com_abc123@duck.com
+        id_at_proxyvote.com_abc123@duck.com
+def456@duck.com
+        venmo_at_venmo.com_def456@duck.com
+```
 
-Email Linter lists each of your disposable addresses and all the addresses they have received from so you can quickly spot suspicious senders.
+Email Linter lists each of your masked addresses and all the addresses they have received from so you can quickly spot suspicious senders.
 
 ## Download
 
@@ -19,19 +28,19 @@ Either:
 
 Email Linter communicates with your email service and optionally stores your API token in your device's keyring. No other communication nor storage takes place. There is a chance future versions of Email Linter will store email addresses locally to work more efficiently and offer more features.
 
-## What are disposable email addresses?
+## What are masked email addresses?
 
 They are email addresses created to be used for only one account each. Whenever one of these addresses starts receiving spam or phishing emails, you know exactly which account was compromised and can disconnect the address from your inbox. This way, you immediately stop receiving spam and never have to give your main email address to anyone you don't trust. Some examples of these email protection services are [DuckDuckGo's Email Protection](https://duckduckgo.com/email), [Fastmail's Masked Email](https://www.fastmail.help/hc/en-us/articles/4406536368911-Masked-Email), [Proton's hide-my-email aliases](https://proton.me/pass/aliases), [Firefox Relay](https://relay.firefox.com/), and [iCloud+'s Hide My Email](https://support.apple.com/en-us/105078). Since the emails received by these addresses _should_ have predictable "from" fields, suspicious senders can be easily found with Email Linter. If needed, you can customize which email protection service addresses to search for. Use the `--help` option for more info.
 
 ## Why
 
-I got phished. Fortunately, it was a fake phishing email for training against phishing, but I learned to not look at emails while half-asleep and, more importantly, the sender's address was different from normal for the disposable address I used. Email services don't seem to consider that suspicious (at least not yet), and checking the sender's address manually for every email is tedious if you don't remember the correct sender address. Email Linter automates checking sender addresses for you. I hope email services will make it obsolete.
+I got phished. Fortunately, it was a fake phishing email for training against phishing, but I learned to not look at emails while half-asleep and, more importantly, the sender's address was different from normal for the masked address I used. Email services don't seem to consider that suspicious (at least not yet), and checking the sender's address manually for every email is tedious if you don't remember the correct sender address. Email Linter automates checking sender addresses for you. I hope email services will make it obsolete.
 
 ## How does it work?
 
 1. First, Email Linter finds all emails in your inbox that went through an email protection service.
-2. Next, it finds all emails outside your spam folder those disposable addresses have ever received.
-3. Then it lists each disposable address and the addresses they have received from. This makes it simple to spot suspicious senders so you can easily search your inbox for malicious emails and decide what to do with them.
+2. Next, it finds all emails outside your spam folder those masked addresses have ever received.
+3. Then it lists each masked address and the addresses they have received from. This makes it simple to spot suspicious senders so you can easily search your inbox for malicious emails and decide what to do with them.
 
 ## API token
 

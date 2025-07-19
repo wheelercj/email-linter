@@ -40,13 +40,13 @@ func runFunc(cmd *cobra.Command, args []string) error {
 
 	accountId, url := getAccountIdAndApiUrl(token)
 	inboxId, spamId := getInboxAndSpamIds(accountId, url, token)
-	disposableAddrs := getDisposableAddrs(inboxId, accountId, url, token)
-	if len(disposableAddrs) == 0 {
-		return fmt.Errorf("no disposable addresses found in your inbox")
+	maskedAddrs := getMaskedAddrs(inboxId, accountId, url, token)
+	if len(maskedAddrs) == 0 {
+		return fmt.Errorf("no masked addresses found in your inbox")
 	}
 
-	toAndFrom := getSendersToDisposableAddrs(disposableAddrs, spamId, accountId, url, token)
-	printAddrs(disposableAddrs, toAndFrom)
+	toAndFrom := getSendersToMaskedAddrs(maskedAddrs, spamId, accountId, url, token)
+	printAddrs(maskedAddrs, toAndFrom)
 
 	return nil
 }
@@ -54,13 +54,13 @@ func runFunc(cmd *cobra.Command, args []string) error {
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:     "email-linter",
-	Version: "v0.0.8",
+	Version: "v0.0.9",
 	RunE:    runFunc,
-	Short:   "Easily find spam and phishing emails received at disposable email addresses.",
+	Short:   "Easily find spam and phishing emails received at masked email addresses.",
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute adds all child commands to the root command and sets flags appropriately. This is called
+// by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -95,7 +95,7 @@ func init() {
 		"maxFrom",
 		"f",
 		5,
-		"max unique senders to a disposable email address; does not apply to JSON output",
+		"max unique senders to a masked email address; does not apply to JSON output",
 	)
 	rootCmd.Flags().BoolVarP(
 		&PrintJson,
@@ -106,10 +106,9 @@ func init() {
 	)
 }
 
-// getApiToken returns a JMAP token that is retrieved from either the
-// system's keyring or interactively from the user. If the user enters
-// the token interactively, they are asked whether they want to save it
-// into the system's keyring.
+// getApiToken returns a JMAP token that is retrieved from either the system's keyring or
+// interactively from the user. If the user enters the token interactively, they are asked whether
+// they want to save it into the system's keyring.
 func getApiToken() (string, error) {
 	token, err := keyring.Get(serviceName, userName)
 	if err == nil && len(token) > 0 {
