@@ -50,7 +50,7 @@ When you run the app, you will be asked to enter the token and whether you want 
 
 ## Caveats
 
-* Email Linter does not protect against [email spoofing](https://til.chriswheeler.dev/email-spoofing/).
+* Email Linter does not protect against [email spoofing](https://til.chriswheeler.dev/email-spoofing/) or other attacks that use someone else's trusted email address.
 * There's a chance Email Linter will think someone else's email address is yours. Why and when is explained in [./docs/multiple-recipients.md](./docs/multiple-recipients.md).
 
 ## Dev resources
