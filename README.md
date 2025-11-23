@@ -17,12 +17,13 @@ def456@duck.com
 
 Email Linter lists each of your masked addresses and all the addresses they have received from so you can quickly spot suspicious senders.
 
-## Download
+## Install
 
-Either:
+Pick one:
 
-* [download a zipped executable file](https://github.com/wheelercj/email-linter/releases), unzip it, and run the app with `./email-linter --help`
-* or run `go install github.com/wheelercj/email-linter@latest` and then `email-linter --help`
+- [download a zipped executable file](https://github.com/wheelercj/email-linter/releases), unzip it, and run the app with `./email-linter --help`
+- `go install github.com/wheelercj/email-linter@latest` and then `email-linter --help`
+- `eget wheelercj/email-linter` and then `./email-linter --help`
 
 ## Privacy
 
@@ -50,19 +51,19 @@ When you run the app, you will be asked to enter the token and whether you want 
 
 ## Caveats
 
-* Email Linter does not protect against [email spoofing](https://til.chriswheeler.dev/email-spoofing/) or other attacks that use someone else's trusted email address.
-* There's a chance Email Linter will think someone else's email address is yours. Why and when is explained in [./docs/multiple-recipients.md](./docs/multiple-recipients.md).
+- Email Linter does not protect against [email spoofing](https://til.chriswheeler.dev/email-spoofing/) or other attacks that use someone else's trusted email address.
+- There's a chance Email Linter will think someone else's email address is yours. Why and when is explained in [./docs/multiple-recipients.md](./docs/multiple-recipients.md).
 
 ## Dev resources
 
 Here are some resources that were helpful while creating this app.
 
-* [intro to Go](https://til.chriswheeler.dev/intro-to-go/)
-* [Integrating with Fastmail](https://www.fastmail.com/for-developers/integrating-with-fastmail/)
-* [Fastmail's JMAP samples](https://github.com/fastmail/JMAP-Samples/tree/main)
-* [JMAP Crash Course](https://jmap.io/crash-course.html)
-* [the JMAP specs and RFCs](https://jmap.io/spec.html)
-* [How and why we built Masked Email with JMAP](https://blog.1password.com/making-masked-email-with-jmap/) by Madeline Hanley at 1Password
-* [spf13/cobra](https://github.com/spf13/cobra)
-* [GoReleaser](https://goreleaser.com/)
-* [GoReleaser Action](https://github.com/marketplace/actions/goreleaser-action)
+- [intro to Go](https://til.chriswheeler.dev/intro-to-go/)
+- [Integrating with Fastmail](https://www.fastmail.com/for-developers/integrating-with-fastmail/)
+- [Fastmail's JMAP samples](https://github.com/fastmail/JMAP-Samples/tree/main)
+- [JMAP Crash Course](https://jmap.io/crash-course.html)
+- [the JMAP specs and RFCs](https://jmap.io/spec.html)
+- [How and why we built Masked Email with JMAP](https://blog.1password.com/making-masked-email-with-jmap/) by Madeline Hanley at 1Password
+- [spf13/cobra](https://github.com/spf13/cobra)
+- [GoReleaser](https://goreleaser.com/)
+- [GoReleaser Action](https://github.com/marketplace/actions/goreleaser-action)
