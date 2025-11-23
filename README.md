@@ -22,7 +22,8 @@ Email Linter lists each of your masked addresses and all the addresses they have
 Pick one:
 
 - [download a zipped executable file](https://github.com/wheelercj/email-linter/releases), unzip it, and run the app with `./email-linter --help`
-- or run `go install github.com/wheelercj/email-linter@latest` and then `email-linter --help`
+- `go install github.com/wheelercj/email-linter@latest` and then `email-linter --help`
+- `eget wheelercj/email-linter` and then `./email-linter --help`
 
 ## Privacy
 
