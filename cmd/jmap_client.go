@@ -69,7 +69,7 @@ func getInboxAndSpamIds(accountId, url, token string) (string, string) {
 							"operator": "OR",
 							"conditions": [
 								{"role": "inbox"},
-								{"name": "spam"}
+								{"role": "junk"}
 							]
 						}
 					},
@@ -84,7 +84,7 @@ func getInboxAndSpamIds(accountId, url, token string) (string, string) {
 							"name": "Mailbox/query",
 							"path": "/ids"
 						},
-						"properties": ["id", "role", "name"]
+						"properties": ["id", "role"]
 					},
 					"1"
 				]
@@ -114,9 +114,8 @@ func getInboxAndSpamIds(accountId, url, token string) (string, string) {
 	ufo := inboxAndSpam[0].(map[string]any) // unidentified folder object
 	otherUfo := inboxAndSpam[1].(map[string]any)
 
-	ufoName := strings.ToLower(ufo["name"].(string))
 	ufoRole := strings.ToLower(ufo["role"].(string))
-	if ufoName == "inbox" || ufoRole == "inbox" {
+	if ufoRole == "inbox" {
 		inboxId = ufo["id"].(string)
 		spamId = otherUfo["id"].(string)
 	} else {
