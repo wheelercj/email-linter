@@ -102,25 +102,34 @@ func getInboxAndSpamIds(accountId, url, token string) (string, string) {
 	if bytes.Equal(mailboxesBytes, []byte("Malformed JSON")) {
 		panic("Malformed JSON")
 	}
-	var mailboxes map[string]any
-	err = json.Unmarshal(mailboxesBytes, &mailboxes)
+	var mailboxesData map[string]any
+	err = json.Unmarshal(mailboxesBytes, &mailboxesData)
 	if err != nil {
 		panic(err)
 	}
-	mailboxesMethodRes := mailboxes["methodResponses"].([]any)
-	inboxAndSpam := mailboxesMethodRes[1].([]any)[1].(map[string]any)["list"].([]any)
+	mailboxesMethodRes := mailboxesData["methodResponses"].([]any)
+	mailboxes := mailboxesMethodRes[1].([]any)[1].(map[string]any)["list"].([]any)
+
+	if len(mailboxes) < 2 {
+		panic("expected an inbox and a spam folder; you have only one of them")
+	} else if len(mailboxes) > 2 {
+		fmt.Println("Warning: expected one inbox and one spam folder; you have more than expected. Please report this bug at https://github.com/wheelercj/email-linter/issues")
+	}
 
 	var inboxId, spamId string
-	ufo := inboxAndSpam[0].(map[string]any) // unidentified folder object
-	otherUfo := inboxAndSpam[1].(map[string]any)
+	mailbox1 := mailboxes[0].(map[string]any)
+	mailbox2 := mailboxes[1].(map[string]any)
 
-	ufoRole := strings.ToLower(ufo["role"].(string))
-	if ufoRole == "inbox" {
-		inboxId = ufo["id"].(string)
-		spamId = otherUfo["id"].(string)
+	role1 := strings.ToLower(mailbox1["role"].(string))
+	role2 := strings.ToLower(mailbox2["role"].(string))
+	if role1 == "inbox" && role2 == "junk" {
+		inboxId = mailbox1["id"].(string)
+		spamId = mailbox2["id"].(string)
+	} else if role1 == "junk" && role2 == "inbox" {
+		inboxId = mailbox2["id"].(string)
+		spamId = mailbox1["id"].(string)
 	} else {
-		inboxId = otherUfo["id"].(string)
-		spamId = ufo["id"].(string)
+		panic(fmt.Sprintf("expected one inbox and one spam folder; you have: %s and %s", role1, role2))
 	}
 
 	if Verbose {
