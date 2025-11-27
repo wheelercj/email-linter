@@ -67,3 +67,4 @@ Here are some resources that were helpful while creating this app.
 - [spf13/cobra](https://github.com/spf13/cobra)
 - [GoReleaser](https://goreleaser.com/)
 - [GoReleaser Action](https://github.com/marketplace/actions/goreleaser-action)
+- [./docs/mailbox-roles.md](./docs/mailbox-roles.md)
