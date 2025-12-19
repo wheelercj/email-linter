@@ -240,7 +240,7 @@ func removeNonUserAddrs(dispAddrs []string) []string {
 func printAddrs(maskedAddrs []string, toAndFrom map[string][]string) {
 	if len(maskedAddrs) == 0 {
 		fmt.Fprintln(os.Stderr, "No masked addresses found in your inbox")
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	for to := range toAndFrom {
