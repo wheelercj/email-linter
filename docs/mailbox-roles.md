@@ -1,6 +1,6 @@
 # Mailbox roles
 
-Each mailbox (inbox, drafts, spam, archive, etc.) has a role and a name (and other attributes).
+Each mailbox (inbox, drafts, spam, archive, etc.) may have a role and a name (and other attributes).
 
 > Note, you should always use the `role` attribute, as names may be localised (or even different between different servers with the same language)!
 >
